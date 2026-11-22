@@ -1,4 +1,4 @@
-import { classifyFact, selectImageForFact, CATEGORY_DEFINITIONS } from "../lib/classifier.js";
+import { classifyFact, selectImageForFact } from "../lib/classifier.js";
 import { setInMemoryImages } from "../lib/data/images.js";
 import rawImages from "../lib/data/images.json" with { type: "json" };
 

@@ -2,7 +2,6 @@ import { jest } from "@jest/globals";
 import {
   SEED_FACTS,
   loadFacts,
-  getAllFacts,
   getFactCount,
   getFactByIndex,
   getRandomFact,

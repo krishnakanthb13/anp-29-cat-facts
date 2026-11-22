@@ -36,7 +36,6 @@ function formatFactMarkdown(fact, options = {}) {
     imageUrl = null,
     category = null,
     badge = null,
-    source = "catfact.ninja",
     isLive = true,
     dotPosition = "start",
     showDot = true

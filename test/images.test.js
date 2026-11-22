@@ -2,7 +2,6 @@ import { jest } from "@jest/globals";
 import {
   SEED_IMAGES,
   loadImages,
-  getAllImages,
   getImagesByCategory,
   getRandomCatImage,
   getRandomImageForCategory,
