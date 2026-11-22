@@ -16,8 +16,10 @@ import { formatFactMarkdown, escapeHtml } from "./lib/utils.js";
 /**
  * Core handler to launch the Peek Viewer sidebar embed.
  * @param {object} app - Amplenote API object.
+ * @returns {Promise<void>}
  */
 async function launchCatFactsPeek(app) {
+  if (!app) return;
   try {
     if (typeof app.openSidebarEmbed === "function") {
       let opened;
@@ -51,6 +53,8 @@ async function launchCatFactsPeek(app) {
 
 /**
  * Handles text insertion for random cat facts.
+ * @param {object} [app] - Amplenote API object.
+ * @returns {Promise<string>} Formatted markdown fact.
  */
 async function insertPlainFact(app) {
   try {
@@ -68,6 +72,8 @@ async function insertPlainFact(app) {
 
 /**
  * Handles text insertion for a formatted quote card.
+ * @param {object} [app] - Amplenote API object.
+ * @returns {Promise<string>} Formatted markdown quote card.
  */
 async function insertQuoteFact(app) {
   try {
@@ -88,6 +94,8 @@ async function insertQuoteFact(app) {
 
 /**
  * Handles text insertion for a fact with a matched contextual photo.
+ * @param {object} [app] - Amplenote API object.
+ * @returns {Promise<string>} Formatted markdown photo card.
  */
 async function insertPhotoFact(app) {
   try {
@@ -108,17 +116,13 @@ async function insertPhotoFact(app) {
 }
 
 // Named insertText options
-const insertTextHandler = async function(app) {
-  return insertPlainFact(app);
-};
+const insertTextHandler = insertPlainFact;
 insertTextHandler["Random Cat Fact"] = insertPlainFact;
 insertTextHandler["Cat Fact Quote Card"] = insertQuoteFact;
 insertTextHandler["Cat Fact with Photo"] = insertPhotoFact;
 
 // Named appOption handler
-const appOptionHandler = async function(app) {
-  return launchCatFactsPeek(app);
-};
+const appOptionHandler = launchCatFactsPeek;
 appOptionHandler["Open Cat Facts"] = launchCatFactsPeek;
 
 /**
@@ -166,9 +170,10 @@ const plugin = {
    * @returns {Promise<any>}
    */
   async onEmbedCall(app, actionName, payload = {}) {
+    const data = payload ?? {};
     switch (actionName) {
       case "insertIntoNote": {
-        const { fact, imageUrl, category, badge, isLive = true, style = "card_with_image" } = payload;
+        const { fact, imageUrl, category, badge, isLive = true, style = "card_with_image" } = data;
         const markdown = formatFactMarkdown(fact, {
           style,
           imageUrl,
@@ -178,7 +183,7 @@ const plugin = {
         });
 
         // 1. Try cursor / selection replacement
-        if (app.context && typeof app.context.replaceSelection === "function") {
+        if (app?.context && typeof app.context.replaceSelection === "function") {
           try {
             const success = await app.context.replaceSelection(markdown);
             if (success) {
@@ -190,7 +195,7 @@ const plugin = {
         }
 
         // 2. Try app.insertContent
-        if (typeof app.insertContent === "function") {
+        if (typeof app?.insertContent === "function") {
           try {
             await app.insertContent(markdown);
             return { success: true, method: "insertContent" };
@@ -200,8 +205,8 @@ const plugin = {
         }
 
         // 3. Try app.insertNoteContent on active note
-        const noteUUID = app.context?.noteUUID;
-        if (noteUUID && typeof app.insertNoteContent === "function") {
+        const noteUUID = app?.context?.noteUUID;
+        if (noteUUID && typeof app?.insertNoteContent === "function") {
           try {
             await app.insertNoteContent({ uuid: noteUUID }, markdown);
             return { success: true, method: "insertNoteContent" };
@@ -217,8 +222,8 @@ const plugin = {
       }
 
       case "notify": {
-        if (typeof app.alert === "function") {
-          await app.alert(payload.message || "", { preface: payload.preface || "Cat Facts" });
+        if (typeof app?.alert === "function") {
+          await app.alert(data.message || "", { preface: data.preface || "Cat Facts" });
         }
         return { success: true };
       }

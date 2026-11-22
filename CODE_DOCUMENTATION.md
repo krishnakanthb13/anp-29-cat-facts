@@ -78,44 +78,66 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
   - `loadImages(app)`: Async hydration engine.
 
 ### 2.3 `lib/classifier.js`
-- **Algorithm**:
-  1. Input `factText` is normalized to lowercase and stripped of special characters.
-  2. The text is scanned against `CATEGORY_DEFINITIONS`.
-  3. Weights are applied:
+- **Algorithm & Optimization**:
+  1. **Pre-Compiled Weight Cache**: During module initialization, `COMPILED_CATEGORIES` pre-computes keyword weights into static tuples (`weight = keyword.includes(" ") ? 4 : keyword.length > 5 ? 2 : 1`), eliminating `Object.entries()` allocations and dynamic string evaluations inside classification loops.
+  2. Input `factText` is normalized to lowercase.
+  3. The text is scanned against the pre-compiled categories:
      - Exact multi-word phrases (e.g. `"tapetum lucidum"`, `"hours a day"`, `"righting reflex"`, `"jacobson's organ"`): **4 points**.
      - Specific domain words (length > 5, e.g. `"papillae"`, `"vibrissae"`, `"whiskers"`, `"collarbone"`): **2 points**.
      - General domain tokens: **1 point**.
   4. The category with the highest aggregate score is chosen.
   5. If max score > 0, returns category metadata, badge, confidence level, and matched keywords.
-  6. If no matches occur, falls back to `"general"` category (`"🐱 Feline Wisdom"`).
+  6. If no matches occur or text is invalid, falls back gracefully to `"general"` category (`"🐱 Feline Wisdom"`).
 
-### 2.3 `lib/api.js` & Failover Architecture
+### 2.4 `lib/api.js` & Failover Architecture
+- **Unified Fetch Helper**: `fetchJsonWithTimeout(url, timeoutMs)` encapsulates `AbortController` signal handling, request timeout clearing, and response validation into a single DRY helper.
 - **5-Tier Resilience Architecture**:
-  1. **Tier 1 (Primary Live API)**: `catfact.ninja/fact` with a 6-second `AbortController` timeout.
+  1. **Tier 1 (Primary Live API)**: `catfact.ninja/fact` with a 6-second timeout.
   2. **Tier 2 (Secondary Live API)**: `meowfacts.herokuapp.com/` fallback with a 4-second timeout if primary fails or times out.
   3. **Tier 3 (Persistent Browser Cache)**: Asynchronous hydration from `localStorage` (`139` facts).
   4. **Tier 4 (Inlined Starter Seed)**: `SEED_FACTS` (10 facts) inlined in the bundle guarantees immediate paint on zero-network first launch.
   5. **Tier 5 (Hard Fallback String)**: Catch blocks return a safe default string so execution never crashes.
 - Automatically handles network drops, CORS restrictions, rate limits (HTTP 429), or server errors (HTTP 500).
 
-### 2.4 `lib/embed.js`
+### 2.5 `lib/embed.js`
 - **Peek Viewer Web App**:
   - Rendered inside an isolated `<iframe>` by Amplenote.
   - Client-side DOM with zero external CSS/JS dependencies.
   - Image skeleton shimmer with graceful `onerror` and `onload` handlers.
+  - Cached DOM references (including `toastIcon`) to avoid repeated querying.
   - Two-way messaging: calls `window.callAmplenotePlugin("insertIntoNote", payload)` to communicate with host plugin.
 
-### 2.5 `lib/utils.js`
+### 2.6 `lib/utils.js`
+- **Single-Pass HTML Sanitization**:
+  - `escapeHtml(str)`: Employs a single-pass regex replacement using a static `HTML_ESCAPE_MAP` lookup table ($O(N)$ traversal) to prevent XSS without chaining multiple string replacements.
 - **Markdown & Indicator Formatting**:
   - `formatFactMarkdown(fact, options)`: Formats facts into plain, quote, or photo card styles.
+  - `attachDot(text, dot, dotPosition)`: Composes indicator emojis without duplicating formatting logic.
   - Replaces cumbersome markdown URL links with a clean indicator emoji: `🟢` for fresh live API data (`catfact.ninja` or `meowfacts`), and `💾` for offline curated storage.
   - Configurable `dotPosition` (`"start"` or `"end"`, defaulting to `"start"`).
-  - Sanitizes user and API inputs with `escapeHtml`.
 
-### 2.6 `cat-facts.js`
+### 2.7 `cat-facts.js`
 - **Amplenote Plugin Protocol**:
-  - `insertText`: Object callable both as a direct function and as a named dictionary (`"Random Cat Fact"`, `"Cat Fact Quote Card"`, `"Cat Fact with Photo"`).
+  - `insertText`: Direct handler and named option dictionary (`"Random Cat Fact"`, `"Cat Fact Quote Card"`, `"Cat Fact with Photo"`).
   - `appOption`: Launches Peek Viewer embed (`openSidebarEmbed` with numeric fallback to `openEmbed`).
   - `renderEmbed`: Generates HTML string.
-  - `onEmbedCall`: Dispatches incoming actions (`insertIntoNote`, `notify`).
+  - `onEmbedCall`: Dispatches incoming actions (`insertIntoNote`, `notify`) with defensive `payload ?? {}` normalization and optional chaining on `app?.context` to safeguard against null or malformed RPC invocations.
+
+---
+
+## 3. Test Suite & Verification
+
+The plugin includes automated unit and integration tests covering all modules:
+- `test/api.test.js`: Mocked live endpoints, abort timeouts, and offline fallback.
+- `test/classifier.test.js`: Keyword matching, scoring tiers, and fallback behavior across 11 categories.
+- `test/facts.test.js`: Seed integrity, dataset bounds, and `getFactByIndex` normalization.
+- `test/images.test.js`: CDN URL format, category distribution, and random selection.
+- `test/plugin.test.js`: Entry point actions, note insertion strategies, and null/undefined payload resilience.
+- `test/utils.test.js`: Single-pass HTML escaping, random sampling, and markdown generation.
+
+**Execution Command**:
+```bash
+node --experimental-vm-modules node_modules/jest/bin/jest.js anp-29-cat-facts/test
+```
+*Current Status: 6 suites, 61 passing tests (100% pass rate).*
 

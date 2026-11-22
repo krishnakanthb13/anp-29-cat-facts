@@ -141,6 +141,14 @@ describe("cat-facts.js Plugin Entry Point", () => {
       expect(res.success).toBe(false);
       expect(res.error).toContain("Unknown action");
     });
+
+    test("handles null or undefined payload safely without throwing", async () => {
+      const resNotify = await plugin.onEmbedCall(mockApp, "notify", null);
+      expect(resNotify.success).toBe(true);
+
+      const resInsert = await plugin.onEmbedCall(mockApp, "insertIntoNote", null);
+      expect(resInsert.success).toBe(true);
+    });
   });
 });
 

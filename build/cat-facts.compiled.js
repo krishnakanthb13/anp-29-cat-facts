@@ -1,10 +1,21 @@
 (() => {
 // anp-29-cat-facts/lib/utils.js
+var HTML_ESCAPE_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#039;"
+};
 function escapeHtml(str) {
   if (typeof str !== "string") {
     return str == null ? "" : String(str);
   }
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  return str.replace(/[&<>"']/g, (match) => HTML_ESCAPE_MAP[match]);
+}
+function attachDot(text, dot, dotPosition = "start") {
+  if (!dot) return text;
+  return dotPosition === "end" ? `${text} ${dot}` : `${dot} ${text}`;
 }
 function sampleRandom(array, excludeItem = null) {
   if (!Array.isArray(array) || array.length === 0) return null;
@@ -34,12 +45,10 @@ function formatFactMarkdown(fact, options = {}) {
   const dot = showDot ? isLive ? "\u{1F7E2}" : "\u{1F4BE}" : "";
   const catLabel = badge || (category ? `\u{1F43E} ${category}` : "\u{1F43E} Cat Fact");
   switch (style) {
-    case "plain": {
-      if (!dot) return cleanFact;
-      return dotPosition === "end" ? `${cleanFact} ${dot}` : `${dot} ${cleanFact}`;
-    }
+    case "plain":
+      return attachDot(cleanFact, dot, dotPosition);
     case "quote": {
-      const header = dot ? dotPosition === "end" ? `**${catLabel}** ${dot}` : `${dot} **${catLabel}**` : `**${catLabel}**`;
+      const header = attachDot(`**${catLabel}**`, dot, dotPosition);
       return `> ${header}
 > ${cleanFact}
 `;
@@ -48,7 +57,7 @@ function formatFactMarkdown(fact, options = {}) {
       const imgLine = imageUrl ? `![${catLabel}](${imageUrl})
 
 ` : "";
-      const header = dot ? dotPosition === "end" ? `**${catLabel}** ${dot}` : `${dot} **${catLabel}**` : `**${catLabel}**`;
+      const header = attachDot(`**${catLabel}**`, dot, dotPosition);
       return `${imgLine}> ${header}
 > ${cleanFact}
 `;
@@ -59,7 +68,7 @@ function formatFactMarkdown(fact, options = {}) {
 `;
     }
     default:
-      return dot ? dotPosition === "end" ? `${cleanFact} ${dot}` : `${dot} ${cleanFact}` : cleanFact;
+      return attachDot(cleanFact, dot, dotPosition);
   }
 }
 
@@ -88,9 +97,7 @@ function getRandomFact(excludeFact = null) {
 // anp-29-cat-facts/lib/api.js
 var CAT_FACT_API_URL = "https://catfact.ninja/fact";
 var MEOW_FACTS_API_URL = "https://meowfacts.herokuapp.com/";
-async function fetchOnlineFact(options = {}) {
-  const { timeoutMs = 6e3 } = options;
-  let primaryError = null;
+async function fetchJsonWithTimeout(url, timeoutMs) {
   let timeoutId = null;
   try {
     const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -98,7 +105,7 @@ async function fetchOnlineFact(options = {}) {
     if (controller && timeoutMs > 0) {
       timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     }
-    const response = await fetch(CAT_FACT_API_URL, {
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Accept": "application/json"
@@ -108,7 +115,18 @@ async function fetchOnlineFact(options = {}) {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    const data = await response.json();
+    return await response.json();
+  } finally {
+    if (timeoutId != null) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+async function fetchOnlineFact(options = {}) {
+  const { timeoutMs = 6e3 } = options;
+  let primaryError = null;
+  try {
+    const data = await fetchJsonWithTimeout(CAT_FACT_API_URL, timeoutMs);
     if (data && typeof data.fact === "string" && data.fact.trim()) {
       return {
         fact: data.fact.trim(),
@@ -120,43 +138,20 @@ async function fetchOnlineFact(options = {}) {
   } catch (err) {
     primaryError = err;
     console.warn("[CatFacts] Primary API catfact.ninja failed:", err.message);
-  } finally {
-    if (timeoutId != null) {
-      clearTimeout(timeoutId);
-    }
   }
-  let timeoutId2 = null;
   try {
-    const controller2 = typeof AbortController !== "undefined" ? new AbortController() : null;
-    const signal2 = controller2 ? controller2.signal : void 0;
-    if (controller2) {
-      timeoutId2 = setTimeout(() => controller2.abort(), 4e3);
-    }
-    const response2 = await fetch(MEOW_FACTS_API_URL, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json"
-      },
-      signal: signal2
-    });
-    if (response2.ok) {
-      const data2 = await response2.json();
-      if (data2 && Array.isArray(data2.data) && data2.data[0]) {
-        const fact = data2.data[0].trim();
-        return {
-          fact,
-          length: fact.length,
-          source: "meowfacts",
-          isLive: true
-        };
-      }
+    const data2 = await fetchJsonWithTimeout(MEOW_FACTS_API_URL, 4e3);
+    if (data2 && Array.isArray(data2.data) && data2.data[0]) {
+      const fact = data2.data[0].trim();
+      return {
+        fact,
+        length: fact.length,
+        source: "meowfacts",
+        isLive: true
+      };
     }
   } catch (err2) {
     console.warn("[CatFacts] Secondary API meowfacts failed:", err2.message);
-  } finally {
-    if (timeoutId2 != null) {
-      clearTimeout(timeoutId2);
-    }
   }
   throw primaryError || new Error("All live feline API endpoints failed");
 }
@@ -615,6 +610,14 @@ var CATEGORY_DEFINITIONS = {
     ]
   }
 };
+var COMPILED_CATEGORIES = Object.entries(CATEGORY_DEFINITIONS).map(([catKey, def]) => ({
+  catKey,
+  def,
+  weightedKeywords: def.keywords.map((keyword) => ({
+    keyword,
+    weight: keyword.includes(" ") ? 4 : keyword.length > 5 ? 2 : 1
+  }))
+}));
 function classifyFact(factText) {
   if (!factText || typeof factText !== "string") {
     return {
@@ -630,12 +633,13 @@ function classifyFact(factText) {
   let bestCategory = null;
   let maxScore = 0;
   let bestMatches = [];
-  for (const [catKey, def] of Object.entries(CATEGORY_DEFINITIONS)) {
+  for (let i = 0; i < COMPILED_CATEGORIES.length; i++) {
+    const { catKey, weightedKeywords } = COMPILED_CATEGORIES[i];
     let score = 0;
     const matches = [];
-    for (const keyword of def.keywords) {
+    for (let k = 0; k < weightedKeywords.length; k++) {
+      const { keyword, weight } = weightedKeywords[k];
       if (normalized.includes(keyword)) {
-        const weight = keyword.includes(" ") ? 4 : keyword.length > 5 ? 2 : 1;
         score += weight;
         matches.push(keyword);
       }
@@ -791,6 +795,27 @@ function renderCatFactsEmbed(app, options = {}) {
       gap: 10px;
     }
 
+    /* Enhanced Emoji Typography */
+    .emoji-icon {
+      font-size: 15.5px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: -1px;
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+    }
+
+    .emoji-lg {
+      font-size: 19px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: -1.5px;
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+    }
+
     /* Minimal Header */
     .header-minimal {
       display: flex;
@@ -804,12 +829,16 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .brand-title-compact {
       font-weight: 800;
-      font-size: 13px;
+      font-size: 13.5px;
       color: var(--text-primary);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       letter-spacing: -0.01em;
+    }
+
+    .brand-title-compact .emoji-lg {
+      font-size: 19px;
     }
 
     .source-link-compact a {
@@ -857,11 +886,11 @@ function renderCatFactsEmbed(app, options = {}) {
     .pill-badge {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      font-size: 11.5px;
+      gap: 6px;
+      padding: 5px 11px;
+      font-size: 12px;
       font-weight: 700;
-      border-radius: 12px;
+      border-radius: 14px;
       background: var(--bg-card-subtle);
       color: var(--text-primary);
       border: 1px solid var(--border);
@@ -958,7 +987,7 @@ function renderCatFactsEmbed(app, options = {}) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-secondary);
       padding-top: 8px;
@@ -969,13 +998,13 @@ function renderCatFactsEmbed(app, options = {}) {
       color: var(--accent);
       background: var(--accent-subtle);
       border: 1px solid var(--accent-border);
-      padding: 2px 8px;
-      border-radius: 8px;
+      padding: 3px 9px;
+      border-radius: 9px;
       font-weight: 700;
-      font-size: 10.5px;
+      font-size: 11.5px;
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
     /* --- CARD 2: IMAGE CARD (SECOND) --- */
@@ -1056,7 +1085,9 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .image-caption::before {
       content: "\u{1F43E} ";
-      opacity: 0.9;
+      font-size: 15px;
+      vertical-align: -1px;
+      opacity: 0.95;
     }
 
     /* --- CARD 3: OPTIONS CARD (THIRD) --- */
@@ -1077,10 +1108,10 @@ function renderCatFactsEmbed(app, options = {}) {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 8px;
       padding: 10px 14px;
       border-radius: var(--radius-sm);
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 700;
       cursor: pointer;
       border: 1px solid transparent;
@@ -1211,9 +1242,9 @@ function renderCatFactsEmbed(app, options = {}) {
       transform: translateX(-50%) translateY(40px);
       background: var(--text-primary);
       color: var(--bg-primary);
-      padding: 8px 18px;
+      padding: 9px 18px;
       border-radius: 30px;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       box-shadow: var(--shadow-lg);
       opacity: 0;
@@ -1222,8 +1253,16 @@ function renderCatFactsEmbed(app, options = {}) {
       z-index: 100;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       border: 1px solid var(--border);
+    }
+
+    #toastIcon {
+      font-size: 19px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .toast.show {
@@ -1251,7 +1290,7 @@ function renderCatFactsEmbed(app, options = {}) {
     <!-- Minimal Header Row -->
     <div class="header-minimal">
       <div class="brand-title-compact">
-        <span>\u{1F43E}</span>
+        <span class="emoji-lg">\u{1F43E}</span>
         <span>Purrfect Cat Facts</span>
       </div>
       <div class="source-link-compact">
@@ -1262,18 +1301,18 @@ function renderCatFactsEmbed(app, options = {}) {
     <!-- CARD 1: Cat Fact Card (Comes FIRST) -->
     <div class="card card-fact">
       <div class="fact-header">
-        <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-          <span class="pill-badge" id="categoryBadge">\u{1F43E} Feline Wisdom</span>
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span class="pill-badge" id="categoryBadge"><span class="emoji-icon">\u{1F43E}</span> <span>Feline Wisdom</span></span>
           <span class="pill-badge pill-live" id="liveBadge" title="Live feline facts API"><span class="live-pulse"></span><span>Live API</span></span>
         </div>
-        <span class="pill-badge smart-match" id="smartBadge">\u2728 Contextual</span>
+        <span class="pill-badge smart-match" id="smartBadge"><span class="emoji-icon">\u2728</span> <span>Contextual</span></span>
       </div>
       <div class="fact-body" id="factBody" title="Click to copy">
         <p class="fact-text" id="factText">Loading your first cat fact...</p>
       </div>
       <div class="fact-footer">
-        <span id="factSourceLabel">\u{1F7E2} catfact.ninja</span>
-        <span class="context-match-detail" id="matchDetail">\u2728 Theme Matched</span>
+        <span id="factSourceLabel"><span class="emoji-icon">\u{1F7E2}</span> <span>catfact.ninja</span></span>
+        <span class="context-match-detail" id="matchDetail"><span class="emoji-icon">\u2728</span> <span>Theme Matched</span></span>
       </div>
     </div>
 
@@ -1281,7 +1320,8 @@ function renderCatFactsEmbed(app, options = {}) {
     <div class="card card-image">
       <div class="image-container">
         <div class="image-skeleton" id="imgSkeleton">
-          <span>\u{1F43E} Loading kitty companion...</span>
+          <span class="emoji-icon">\u{1F43E}</span>
+          <span>Loading kitty companion...</span>
         </div>
         <img id="catImg" class="cat-img" style="display: none;" referrerpolicy="no-referrer" alt="" />
         <div class="image-caption" id="imageCaption">Cat companion</div>
@@ -1292,24 +1332,26 @@ function renderCatFactsEmbed(app, options = {}) {
     <div class="card card-options">
       <div class="primary-btn-row">
         <button class="btn btn-primary" id="btnNext" title="Shortcut: Spacebar or Right Arrow">
-          <span>\u{1F43E} Next Fact</span>
+          <span class="emoji-icon">\u{1F43E}</span>
+          <span>Next Fact</span>
         </button>
         <button class="btn btn-secondary" id="btnCopy" title="Shortcut: C">
-          <span>\u{1F4CB} Copy Fact</span>
+          <span class="emoji-icon">\u{1F4CB}</span>
+          <span>Copy Fact</span>
         </button>
       </div>
 
       <!-- Toggles -->
       <div class="toggles-bar">
         <label class="toggle-group" for="toggleSmart" title="Enable smart semantic matching of cat photos to fact topics">
-          <span>\u2728 Smart Match</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px;"><span class="emoji-icon">\u2728</span> <span>Smart Match</span></span>
           <span class="toggle-switch">
             <input type="checkbox" id="toggleSmart" checked />
             <span class="slider"></span>
           </span>
         </label>
         <label class="toggle-group" for="toggleLive" title="Fetch live facts from catfact.ninja or use fast offline library">
-          <span>\u{1F310} Live API</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px;"><span class="emoji-icon">\u{1F310}</span> <span>Live API</span></span>
           <span class="toggle-switch">
             <input type="checkbox" id="toggleLive" checked />
             <span class="slider"></span>
@@ -1415,13 +1457,28 @@ function renderCatFactsEmbed(app, options = {}) {
       const toggleLive = document.getElementById("toggleLive");
       const toast = document.getElementById("toast");
       const toastMsg = document.getElementById("toastMsg");
+      const toastIcon = document.getElementById("toastIcon");
 
       // Toast notification helper
       function showToast(msg, icon = "\u2705") {
         toastMsg.textContent = msg;
-        document.getElementById("toastIcon").textContent = icon;
+        if (toastIcon) {
+          toastIcon.textContent = icon;
+        }
         toast.classList.add("show");
         setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      // Helper to format badge strings with prominent emoji typography
+      function formatBadgeHtml(badgeStr) {
+        if (!badgeStr) return "";
+        const spaceIdx = badgeStr.indexOf(" ");
+        if (spaceIdx > 0) {
+          const emoji = badgeStr.slice(0, spaceIdx);
+          const label = badgeStr.slice(spaceIdx + 1);
+          return '<span class="emoji-icon">' + emoji + '</span> <span>' + label + '</span>';
+        }
+        return badgeStr;
       }
 
       // Classifier implementation in browser
@@ -1617,29 +1674,29 @@ function renderCatFactsEmbed(app, options = {}) {
             liveBadge.className = "pill-badge pill-live";
             liveBadge.innerHTML = '<span class="live-pulse"></span><span>Live API</span>';
             liveBadge.title = source + (latency ? " (" + latency + "ms)" : "");
-            factSourceLabel.innerHTML = '<span>\u{1F7E2} ' + source + (latency ? ' <small style="font-weight:700; opacity:0.9">(' + latency + 'ms)</small>' : '') + '</span>';
+            factSourceLabel.innerHTML = '<span><span class="emoji-icon">\u{1F7E2}</span> <span>' + source + '</span>' + (latency ? ' <small style="font-weight:700; opacity:0.9">(' + latency + 'ms)</small>' : '') + '</span>';
           } else {
             liveBadge.className = "pill-badge pill-live offline";
-            liveBadge.innerHTML = '<span>\u{1F4BE} Offline Library</span>';
+            liveBadge.innerHTML = '<span><span class="emoji-icon">\u{1F4BE}</span> <span>Offline Library</span></span>';
             liveBadge.title = isLiveApi ? "Network unavailable, using offline facts" : "Live API toggled off";
-            factSourceLabel.innerHTML = '<span>\u{1F4BE} ' + source + '</span>';
+            factSourceLabel.innerHTML = '<span><span class="emoji-icon">\u{1F4BE}</span> <span>' + source + '</span></span>';
           }
 
           if (selection.isContextual) {
-            categoryBadge.textContent = selection.classification.badge;
+            categoryBadge.innerHTML = formatBadgeHtml(selection.classification.badge);
             categoryBadge.style.display = "inline-flex";
             smartBadge.style.display = "inline-flex";
-            smartBadge.textContent = "\u2728 Contextual";
+            smartBadge.innerHTML = '<span class="emoji-icon">\u2728</span> <span>Contextual</span>';
             smartBadge.classList.add("smart-match");
 
             const kw = selection.classification.matchedKeywords.slice(0, 3).join(", ");
-            matchDetail.textContent = kw ? "\u2728 " + kw : "\u2728 Theme Matched";
+            matchDetail.innerHTML = '<span class="emoji-icon">\u2728</span> <span>' + (kw || "Theme Matched") + '</span>';
             matchDetail.style.display = "inline-flex";
           } else {
-            categoryBadge.textContent = isSmartMatch ? "\u{1F431} Feline Wisdom" : "\u{1F3B2} Random Cat";
+            categoryBadge.innerHTML = formatBadgeHtml(isSmartMatch ? "\u{1F431} Feline Wisdom" : "\u{1F3B2} Random Cat");
             categoryBadge.style.display = "inline-flex";
             smartBadge.style.display = isSmartMatch ? "none" : "inline-flex";
-            smartBadge.textContent = "\u{1F3B2} Random";
+            smartBadge.innerHTML = '<span class="emoji-icon">\u{1F3B2}</span> <span>Random</span>';
             smartBadge.classList.remove("smart-match");
             matchDetail.style.display = "none";
           }
@@ -1709,15 +1766,15 @@ function renderCatFactsEmbed(app, options = {}) {
           catImg.src = currentImage.url;
           imageCaption.textContent = currentImage.alt;
           if (selection.isContextual) {
-            categoryBadge.textContent = selection.classification.badge;
-            smartBadge.textContent = "\u2728 Contextual";
+            categoryBadge.innerHTML = formatBadgeHtml(selection.classification.badge);
+            smartBadge.innerHTML = '<span class="emoji-icon">\u2728</span> <span>Contextual</span>';
             smartBadge.classList.add("smart-match");
             const kw = selection.classification.matchedKeywords.slice(0, 3).join(", ");
-            matchDetail.textContent = kw ? "\u2728 " + kw : "\u2728 Theme Matched";
+            matchDetail.innerHTML = '<span class="emoji-icon">\u2728</span> <span>' + (kw || "Theme Matched") + '</span>';
             matchDetail.style.display = "inline-flex";
           } else {
-            categoryBadge.textContent = isSmartMatch ? "\u{1F431} Feline Wisdom" : "\u{1F3B2} Random Cat";
-            smartBadge.textContent = "\u{1F3B2} Random";
+            categoryBadge.innerHTML = formatBadgeHtml(isSmartMatch ? "\u{1F431} Feline Wisdom" : "\u{1F3B2} Random Cat");
+            smartBadge.innerHTML = '<span class="emoji-icon">\u{1F3B2}</span> <span>Random</span>';
             smartBadge.classList.remove("smart-match");
             matchDetail.style.display = "none";
           }
@@ -1752,6 +1809,7 @@ function renderCatFactsEmbed(app, options = {}) {
 
 // anp-29-cat-facts/cat-facts.js
 async function launchCatFactsPeek(app) {
+  if (!app) return;
   try {
     if (typeof app.openSidebarEmbed === "function") {
       let opened;
@@ -1826,15 +1884,11 @@ async function insertPhotoFact(app) {
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }
-var insertTextHandler = async function(app) {
-  return insertPlainFact(app);
-};
+var insertTextHandler = insertPlainFact;
 insertTextHandler["Random Cat Fact"] = insertPlainFact;
 insertTextHandler["Cat Fact Quote Card"] = insertQuoteFact;
 insertTextHandler["Cat Fact with Photo"] = insertPhotoFact;
-var appOptionHandler = async function(app) {
-  return launchCatFactsPeek(app);
-};
+var appOptionHandler = launchCatFactsPeek;
 appOptionHandler["Open Cat Facts"] = launchCatFactsPeek;
 var plugin = {
   /**
@@ -1875,9 +1929,10 @@ var plugin = {
    * @returns {Promise<any>}
    */
   async onEmbedCall(app, actionName, payload = {}) {
+    const data = payload ?? {};
     switch (actionName) {
       case "insertIntoNote": {
-        const { fact, imageUrl, category, badge, isLive = true, style = "card_with_image" } = payload;
+        const { fact, imageUrl, category, badge, isLive = true, style = "card_with_image" } = data;
         const markdown = formatFactMarkdown(fact, {
           style,
           imageUrl,
@@ -1885,7 +1940,7 @@ var plugin = {
           badge,
           isLive
         });
-        if (app.context && typeof app.context.replaceSelection === "function") {
+        if (app?.context && typeof app.context.replaceSelection === "function") {
           try {
             const success = await app.context.replaceSelection(markdown);
             if (success) {
@@ -1895,7 +1950,7 @@ var plugin = {
             console.warn("[CatFacts] replaceSelection failed, trying note insertion:", e);
           }
         }
-        if (typeof app.insertContent === "function") {
+        if (typeof app?.insertContent === "function") {
           try {
             await app.insertContent(markdown);
             return { success: true, method: "insertContent" };
@@ -1903,8 +1958,8 @@ var plugin = {
             console.warn("[CatFacts] insertContent failed:", e);
           }
         }
-        const noteUUID = app.context?.noteUUID;
-        if (noteUUID && typeof app.insertNoteContent === "function") {
+        const noteUUID = app?.context?.noteUUID;
+        if (noteUUID && typeof app?.insertNoteContent === "function") {
           try {
             await app.insertNoteContent({ uuid: noteUUID }, markdown);
             return { success: true, method: "insertNoteContent" };
@@ -1918,8 +1973,8 @@ var plugin = {
         };
       }
       case "notify": {
-        if (typeof app.alert === "function") {
-          await app.alert(payload.message || "", { preface: payload.preface || "Cat Facts" });
+        if (typeof app?.alert === "function") {
+          await app.alert(data.message || "", { preface: data.preface || "Cat Facts" });
         }
         return { success: true };
       }

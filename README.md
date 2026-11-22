@@ -127,24 +127,25 @@ Tier 5: Safe Hardcoded Fallback String ─────────────�
 
 ```
 anp-29-cat-facts/
-├── cat-facts.js                  # Main plugin entry point (Amplenote actions)
+├── cat-facts.js                  # Main plugin entry point (Amplenote actions & defensive RPC)
 ├── package.json                  # Scripts and package configuration
 ├── lib/
-│   ├── api.js                   # catfact.ninja client with timeout & offline fallback
-│   ├── classifier.js            # Semantic classifier & contextual image matcher
+│   ├── api.js                   # catfact.ninja/meowfacts client with unified timeout & fallback
+│   ├── classifier.js            # Semantic classifier with pre-compiled keyword weights
 │   ├── embed.js                 # Peek Viewer HTML/CSS/JS dashboard generator
-│   ├── utils.js                 # HTML escaping, markdown formatting, array helpers
+│   ├── utils.js                 # Single-pass HTML escaping, markdown formatting, array helpers
 │   └── data/
-│       ├── facts.js             # 139 verified curated cat facts
-│       └── images.js            # 67 verified Unsplash cat images with metadata
+│       ├── facts.js             # 139 verified curated cat facts & debloating loader
+│       ├── facts.json           # Debloated facts catalog
+│       ├── images.js            # 70 verified authentic feline images with metadata
+│       └── images.json          # Debloated images catalog
 ├── test/
-│   ├── api.test.js              # API unit tests (mocked & fallback)
-│   ├── classifier.test.js       # Classifier categorization tests
-│   ├── embed.test.js            # Peek viewer rendering tests
-│   ├── facts.test.js            # Facts dataset integrity tests
-│   ├── images.test.js           # 50+ photos catalog validation tests
-│   ├── plugin.test.js           # Plugin actions & onEmbedCall tests
-│   └── utils.test.js            # Utility & markdown formatting tests
+│   ├── api.test.js              # API unit tests (mocked & failover)
+│   ├── classifier.test.js       # Classifier categorization & weight tests
+│   ├── facts.test.js            # Facts dataset integrity & bounds tests
+│   ├── images.test.js           # 70-photo catalog validation tests
+│   ├── plugin.test.js           # Plugin actions & onEmbedCall payload tests
+│   └── utils.test.js            # Single-pass escaping & markdown formatting tests
 └── build/
     └── cat-facts.compiled.js    # Production-ready IIFE bundle for Amplenote
 ```
@@ -154,8 +155,11 @@ anp-29-cat-facts/
 ## 🛠️ Development & Testing
 
 ```bash
-# Run all unit tests for this plugin
-npm test -- anp-29-cat-facts
+# Run all unit tests for this plugin (from repository root)
+node --experimental-vm-modules node_modules/jest/bin/jest.js anp-29-cat-facts/test
+
+# Or from within the anp-29-cat-facts directory
+npm test
 
 # Compile and bundle for Amplenote
 node esbuild.js 29

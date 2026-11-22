@@ -26,3 +26,10 @@ Amplenote's Peek Viewer is often kept as a compact sidebar (300px to 450px wide)
 - High-contrast, theme-adaptive CSS variables blend seamlessly with Amplenote's light and dark themes.
 - Accessible keyboard shortcuts (<kbd>Space</kbd> for next fact, <kbd>C</kbd> for copy) allow rapid browsing without touching the mouse.
 
+### 1.6 Performance-Safe & Defensive Engineering
+Amplenote plugins execute within a rich note-taking environment where keystrokes, note switches, and editing actions must never experience lag.
+- **Zero-Overhead Semantic Analysis**: Classification avoids runtime object allocations (`Object.entries()`) and scans against pre-compiled static keyword weights.
+- **Single-Pass Sanitization**: String escaping utilizes single-pass regular expression lookups ($O(N)$) rather than chained multi-pass replacements.
+- **Defensive Host Boundaries**: Host RPC calls (`onEmbedCall`) and API handlers normalize incoming payloads defensively (`payload ?? {}`) and use optional chaining, ensuring that mobile environments or missing note context fail gracefully without unhandled exceptions.
+
+
