@@ -1,0 +1,86 @@
+  console.warn
+    [CatFacts] Primary API catfact.ninja failed: catfact.ninja down
+
+    [0m [90m 79 |[39m   } [36mcatch[39m (err) {
+     [90m 80 |[39m     primaryError [33m=[39m err[33m;[39m
+    [31m[1m>[22m[39m[90m 81 |[39m     console[33m.[39mwarn([32m"[CatFacts] Primary API catfact.ninja failed:"[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 82 |[39m   }
+     [90m 83 |[39m
+     [90m 84 |[39m   [90m// 2. Try secondary live endpoint (meowfacts)[39m[0m
+
+      at fetchOnlineFact (anp-29-cat-facts/lib/api.js:81:13)
+      at Object.<anonymous> (anp-29-cat-facts/test/api.test.js:34:19)
+
+  console.warn
+    [CatFacts] Primary API catfact.ninja failed: HTTP 500: Internal Server Error
+
+    [0m [90m 79 |[39m   } [36mcatch[39m (err) {
+     [90m 80 |[39m     primaryError [33m=[39m err[33m;[39m
+    [31m[1m>[22m[39m[90m 81 |[39m     console[33m.[39mwarn([32m"[CatFacts] Primary API catfact.ninja failed:"[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 82 |[39m   }
+     [90m 83 |[39m
+     [90m 84 |[39m   [90m// 2. Try secondary live endpoint (meowfacts)[39m[0m
+
+      at fetchOnlineFact (anp-29-cat-facts/lib/api.js:81:13)
+      at Object.<anonymous> (anp-29-cat-facts/test/api.test.js:47:7)
+
+  console.warn
+    [CatFacts] Secondary API meowfacts failed: HTTP 500: Internal Server Error
+
+    [0m [90m  95 |[39m     }
+     [90m  96 |[39m   } [36mcatch[39m (err2) {
+    [31m[1m>[22m[39m[90m  97 |[39m     console[33m.[39mwarn([32m"[CatFacts] Secondary API meowfacts failed:"[39m[33m,[39m err2[33m.[39mmessage)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m  98 |[39m   }
+     [90m  99 |[39m
+     [90m 100 |[39m   [36mthrow[39m primaryError [33m||[39m [36mnew[39m [33mError[39m([32m"All live feline API endpoints failed"[39m)[33m;[39m[0m
+
+      at fetchOnlineFact (anp-29-cat-facts/lib/api.js:97:13)
+      at Object.<anonymous> (anp-29-cat-facts/test/api.test.js:47:7)
+
+  console.warn
+    [CatFacts] Primary API catfact.ninja failed: Network connection lost
+
+    [0m [90m 79 |[39m   } [36mcatch[39m (err) {
+     [90m 80 |[39m     primaryError [33m=[39m err[33m;[39m
+    [31m[1m>[22m[39m[90m 81 |[39m     console[33m.[39mwarn([32m"[CatFacts] Primary API catfact.ninja failed:"[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 82 |[39m   }
+     [90m 83 |[39m
+     [90m 84 |[39m   [90m// 2. Try secondary live endpoint (meowfacts)[39m[0m
+
+      at fetchOnlineFact (anp-29-cat-facts/lib/api.js:81:13)
+      at getCatFact (anp-29-cat-facts/lib/api.js:118:22)
+      at Object.<anonymous> (anp-29-cat-facts/test/api.test.js:66:19)
+
+  console.warn
+    [CatFacts] Secondary API meowfacts failed: Network connection lost
+
+    [0m [90m  95 |[39m     }
+     [90m  96 |[39m   } [36mcatch[39m (err2) {
+    [31m[1m>[22m[39m[90m  97 |[39m     console[33m.[39mwarn([32m"[CatFacts] Secondary API meowfacts failed:"[39m[33m,[39m err2[33m.[39mmessage)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m  98 |[39m   }
+     [90m  99 |[39m
+     [90m 100 |[39m   [36mthrow[39m primaryError [33m||[39m [36mnew[39m [33mError[39m([32m"All live feline API endpoints failed"[39m)[33m;[39m[0m
+
+      at fetchOnlineFact (anp-29-cat-facts/lib/api.js:97:13)
+      at getCatFact (anp-29-cat-facts/lib/api.js:118:22)
+      at Object.<anonymous> (anp-29-cat-facts/test/api.test.js:66:19)
+
+  console.warn
+    [CatFacts] Live fetch from APIs failed, using curated fact fallback: Network connection lost
+
+    [0m [90m 125 |[39m       }
+     [90m 126 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 127 |[39m       console[33m.[39mwarn([32m"[CatFacts] Live fetch from APIs failed, using curated fact fallback:"[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 128 |[39m     }
+     [90m 129 |[39m   }
+     [90m 130 |[39m[0m
+
+      at getCatFact (anp-29-cat-facts/lib/api.js:127:15)
+      at Object.<anonymous> (anp-29-cat-facts/test/api.test.js:66:19)
+

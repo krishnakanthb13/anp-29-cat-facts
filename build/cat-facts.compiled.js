@@ -776,8 +776,8 @@ function renderCatFactsEmbed(app, options = {}) {
       font-family: var(--font-family);
       background-color: var(--bg-primary);
       color: var(--text-primary);
-      padding: 10px 12px;
-      line-height: 1.5;
+      padding: 7px 9px;
+      line-height: 1.45;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -788,15 +788,15 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .container {
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 7px;
     }
 
     /* Enhanced Emoji Typography */
     .emoji-icon {
-      font-size: 15.5px;
+      font-size: 13.5px;
       line-height: 1;
       display: inline-flex;
       align-items: center;
@@ -806,12 +806,12 @@ function renderCatFactsEmbed(app, options = {}) {
     }
 
     .emoji-lg {
-      font-size: 19px;
+      font-size: 16px;
       line-height: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      vertical-align: -1.5px;
+      vertical-align: -1px;
       font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
     }
 
@@ -820,24 +820,24 @@ function renderCatFactsEmbed(app, options = {}) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 3px 6px;
-      font-size: 11.5px;
+      padding: 2px 4px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-secondary);
     }
 
     .brand-title-compact {
       font-weight: 800;
-      font-size: 13.5px;
+      font-size: 12.5px;
       color: var(--text-primary);
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       letter-spacing: -0.01em;
     }
 
     .brand-title-compact .emoji-lg {
-      font-size: 19px;
+      font-size: 16px;
     }
 
     .source-link-compact a {
@@ -855,7 +855,7 @@ function renderCatFactsEmbed(app, options = {}) {
     /* Shared Card Styles (Bento Card Aesthetic) */
     .card {
       background: var(--bg-card);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-md);
       border: 1px solid var(--border);
       box-shadow: var(--shadow-sm);
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
@@ -869,27 +869,27 @@ function renderCatFactsEmbed(app, options = {}) {
 
     /* --- CARD 1: FACT CARD (FIRST) --- */
     .card-fact {
-      padding: 14px 16px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 11px;
+      gap: 7px;
     }
 
     .fact-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
+      gap: 5px;
     }
 
     .pill-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 11px;
-      font-size: 12px;
+      gap: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
       font-weight: 700;
-      border-radius: 14px;
+      border-radius: 10px;
       background: var(--bg-card-subtle);
       color: var(--text-primary);
       border: 1px solid var(--border);
@@ -907,8 +907,9 @@ function renderCatFactsEmbed(app, options = {}) {
       background: rgba(16, 185, 129, 0.16);
       color: #059669;
       border-color: rgba(16, 185, 129, 0.45);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
+      padding: 2px 6px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -927,8 +928,8 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .live-pulse {
       display: inline-block;
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background-color: #10b981;
       box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
@@ -943,18 +944,18 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .latency-ms {
       font-weight: 700;
-      font-size: 10.5px;
+      font-size: 10px;
       opacity: 0.95;
     }
 
     .fact-body {
-      min-height: 56px;
+      min-height: 44px;
       display: flex;
       align-items: center;
       cursor: pointer;
-      padding: 12px 14px;
+      padding: 8px 11px;
       background: var(--bg-card-subtle);
-      border-left: 3.5px solid var(--accent);
+      border-left: 3px solid var(--accent);
       border-radius: var(--radius-sm);
       transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
       position: relative;
@@ -971,8 +972,8 @@ function renderCatFactsEmbed(app, options = {}) {
     }
 
     .fact-text {
-      font-size: 15px;
-      line-height: 1.6;
+      font-size: 13px;
+      line-height: 1.45;
       color: var(--text-primary);
       font-weight: 700;
       transition: opacity 0.2s ease;
@@ -986,10 +987,10 @@ function renderCatFactsEmbed(app, options = {}) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-secondary);
-      padding-top: 8px;
+      padding-top: 6px;
       border-top: 1px solid var(--border);
     }
 
@@ -997,13 +998,13 @@ function renderCatFactsEmbed(app, options = {}) {
       color: var(--accent);
       background: var(--accent-subtle);
       border: 1px solid var(--accent-border);
-      padding: 3px 9px;
-      border-radius: 9px;
+      padding: 2px 6px;
+      border-radius: 6px;
       font-weight: 700;
-      font-size: 11.5px;
+      font-size: 10.5px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
     /* --- CARD 2: IMAGE CARD (SECOND) --- */
@@ -1015,7 +1016,7 @@ function renderCatFactsEmbed(app, options = {}) {
     .image-container {
       position: relative;
       width: 100%;
-      height: 230px;
+      height: 200px;
       background: var(--bg-card-subtle);
       overflow: hidden;
     }
@@ -1047,9 +1048,9 @@ function renderCatFactsEmbed(app, options = {}) {
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      gap: 6px;
+      gap: 5px;
     }
 
     .image-skeleton.hidden {
@@ -1063,12 +1064,12 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .image-caption {
       position: absolute;
-      bottom: 9px;
-      left: 9px;
-      right: 9px;
-      font-size: 11.5px;
+      bottom: 7px;
+      left: 7px;
+      right: 7px;
+      font-size: 10.5px;
       font-weight: 700;
-      padding: 5px 10px;
+      padding: 3px 8px;
       border-radius: var(--radius-sm);
       background: rgba(15, 23, 42, 0.82);
       color: #ffffff;
@@ -1084,33 +1085,33 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .image-caption::before {
       content: "\u{1F43E} ";
-      font-size: 15px;
+      font-size: 13px;
       vertical-align: -1px;
       opacity: 0.95;
     }
 
     /* --- CARD 3: OPTIONS CARD (THIRD) --- */
     .card-options {
-      padding: 13px 15px;
+      padding: 9px 11px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 7px;
     }
 
     .primary-btn-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 9px;
+      gap: 6px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 10px 14px;
+      gap: 6px;
+      padding: 7px 11px;
       border-radius: var(--radius-sm);
-      font-size: 13.5px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       border: 1px solid transparent;
@@ -1125,12 +1126,12 @@ function renderCatFactsEmbed(app, options = {}) {
     .btn-primary {
       background: var(--accent-gradient);
       color: #ffffff;
-      box-shadow: 0 3px 12px rgba(249, 115, 22, 0.32);
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.28);
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
     .btn-primary:hover {
-      box-shadow: 0 5px 16px rgba(249, 115, 22, 0.42);
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.38);
       transform: translateY(-1px);
     }
 
@@ -1151,11 +1152,11 @@ function renderCatFactsEmbed(app, options = {}) {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: 6px 9px;
       background: var(--bg-card-subtle);
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-primary);
     }
@@ -1163,7 +1164,7 @@ function renderCatFactsEmbed(app, options = {}) {
     .toggle-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-weight: 700;
       color: var(--text-primary);
       cursor: pointer;
@@ -1172,8 +1173,8 @@ function renderCatFactsEmbed(app, options = {}) {
     .toggle-switch {
       position: relative;
       display: inline-block;
-      width: 32px;
-      height: 18px;
+      width: 28px;
+      height: 16px;
     }
 
     .toggle-switch input {
@@ -1194,8 +1195,8 @@ function renderCatFactsEmbed(app, options = {}) {
     .slider:before {
       position: absolute;
       content: "";
-      height: 14px;
-      width: 14px;
+      height: 12px;
+      width: 12px;
       left: 2px;
       bottom: 2px;
       background-color: white;
@@ -1209,25 +1210,25 @@ function renderCatFactsEmbed(app, options = {}) {
     }
 
     input:checked + .slider:before {
-      transform: translateX(14px);
+      transform: translateX(12px);
     }
 
     .shortcut-hint {
       text-align: center;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-secondary);
-      padding-top: 2px;
+      padding-top: 1px;
     }
 
     kbd {
       font-family: inherit;
-      padding: 2px 6px;
-      border-radius: 5px;
+      padding: 1px 5px;
+      border-radius: 4px;
       background: var(--bg-card-subtle);
       border: 1px solid var(--border);
       border-bottom: 2px solid var(--border-dark);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 800;
       color: var(--text-primary);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -1236,14 +1237,14 @@ function renderCatFactsEmbed(app, options = {}) {
     /* Toast Notification */
     .toast {
       position: fixed;
-      bottom: 18px;
+      bottom: 14px;
       left: 50%;
       transform: translateX(-50%) translateY(40px);
       background: var(--text-primary);
       color: var(--bg-primary);
-      padding: 9px 18px;
-      border-radius: 30px;
-      font-size: 12.5px;
+      padding: 6px 14px;
+      border-radius: 24px;
+      font-size: 11.5px;
       font-weight: 700;
       box-shadow: var(--shadow-lg);
       opacity: 0;
@@ -1252,12 +1253,12 @@ function renderCatFactsEmbed(app, options = {}) {
       z-index: 100;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       border: 1px solid var(--border);
     }
 
     #toastIcon {
-      font-size: 19px;
+      font-size: 15px;
       line-height: 1;
       display: inline-flex;
       align-items: center;

@@ -85,6 +85,18 @@ describe("cat-facts.js Plugin Entry Point", () => {
       await plugin.appOption(mockApp);
       expect(mockApp.openEmbed).toHaveBeenCalledWith(1.1, {});
     });
+
+    test("falls back to app.alert when embed methods are unavailable", async () => {
+      const minimalApp = {
+        alert: jest.fn().mockResolvedValue(true)
+      };
+      await plugin.appOption(minimalApp);
+      expect(minimalApp.alert).toHaveBeenCalled();
+    });
+
+    test("handles null or missing app without throwing", async () => {
+      await expect(plugin.appOption(null)).resolves.toBeUndefined();
+    });
   });
 
   describe("renderEmbed Execution", () => {

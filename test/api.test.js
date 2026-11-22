@@ -22,7 +22,22 @@ describe("api.js", () => {
       expect(global.fetch).toHaveBeenCalledWith(CAT_FACT_API_URL, expect.any(Object));
     });
 
-    test("throws on HTTP error", async () => {
+    test("falls back to secondary live endpoint (meowfacts) if catfact.ninja fails", async () => {
+      global.fetch = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("catfact.ninja down"))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: ["Cats sleep 16 hours a day."] })
+        });
+
+      const res = await fetchOnlineFact({ timeoutMs: 500 });
+      expect(res.fact).toBe("Cats sleep 16 hours a day.");
+      expect(res.source).toBe("meowfacts");
+      expect(res.isLive).toBe(true);
+    });
+
+    test("throws on HTTP error when all endpoints fail", async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 500,
@@ -57,6 +72,12 @@ describe("api.js", () => {
       const res = await getCatFact({ preferOnline: false });
       expect(CAT_FACTS).toContain(res.fact);
       expect(res.source).toBe("curated");
+    });
+
+    test("avoids repeating excludeFact when using curated fallback", async () => {
+      const excluded = CAT_FACTS[0];
+      const res = await getCatFact({ preferOnline: false, excludeFact: excluded });
+      expect(res.fact).not.toBe(excluded);
     });
   });
 });

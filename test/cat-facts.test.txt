@@ -1,0 +1,70 @@
+================================================================================
+Test Report — Purrfect Cat Facts (anp-29-cat-facts)
+Date: 2026-11-22
+Auditor: Agent (anp_test & scaffold_tests)
+================================================================================
+
+METRICS SUMMARY
+--------------------------------------------------------------------------------
+Total Test Suites   : 7 (All Passing)
+Total Tests         : 76
+Passed              : 76
+Failed              : 0
+Skipped             : 0
+Confidence Score    : 10/10
+Regression Coverage : Yes (Full)
+Pass Rate           : 100.0%
+
+TEST SUITE BREAKDOWN
+--------------------------------------------------------------------------------
+1. test/embed.test.js
+   - renderCatFactsEmbed — Happy Path (6 tests)
+   - renderCatFactsEmbed — Edge Cases (3 tests)
+   - renderCatFactsEmbed — Error Handling & Fallback (2 tests)
+   Status: PASS (11 tests)
+
+2. test/plugin.test.js
+   - Plugin Exports Structure (3 tests)
+   - insertText Execution (4 tests)
+   - appOption Execution (4 tests)
+   - renderEmbed Execution (1 test)
+   - onEmbedCall Execution (5 tests)
+   Status: PASS (17 tests)
+
+3. test/api.test.js
+   - fetchOnlineFact (3 tests: catfact.ninja, meowfacts fallback, HTTP error)
+   - getCatFact (4 tests: online, curated fallback, preferOnline false, excludeFact)
+   Status: PASS (7 tests)
+
+4. test/classifier.test.js
+   - classifyFact (13 tests: 11 categories + general fallback + null/empty)
+   - selectImageForFact (3 tests: contextual, forceRandom, excludeUrl)
+   Status: PASS (16 tests)
+
+5. test/facts.test.js
+   - SEED_FACTS validation (1 test)
+   - debloated facts.json validation (1 test)
+   - loadFacts hydration (1 test)
+   - getFactByIndex bounds & wrap-around (1 test)
+   - getRandomFact & excludeFact avoidance (2 tests)
+   Status: PASS (6 tests)
+
+6. test/images.test.js
+   - SEED_IMAGES 11 categories (1 test)
+   - debloated images.json catalog (1 test)
+   - CDN URL and unique ID verification (1 test)
+   - loadImages hydration (1 test)
+   - Category filtering & coverage (1 test)
+   - getRandomCatImage & getRandomImageForCategory (2 tests)
+   Status: PASS (7 tests)
+
+7. test/utils.test.js
+   - escapeHtml (2 tests: special chars, nullish/numeric handling)
+   - sampleRandom (3 tests: empty, single-item, excludeItem avoidance)
+   - formatFactMarkdown (7 tests: plain, quote, card_with_image, callout, dots)
+   Status: PASS (12 tests)
+
+================================================================================
+CONCLUSION: All suites passing without regressions. Ready for bundling.
+================================================================================
+
