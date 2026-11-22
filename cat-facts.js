@@ -16,7 +16,7 @@ import { formatFactMarkdown, escapeHtml } from "./lib/utils.js";
 /**
  * Core handler to launch the Peek Viewer sidebar embed.
  * @param {object} app - Amplenote API object.
- * @returns {Promise<void>}
+ * @returns {Promise<void>} - Resolves once the sidebar embed or fallback alert is invoked.
  */
 async function launchCatFactsPeek(app) {
   if (!app) return;
@@ -167,7 +167,7 @@ const plugin = {
    * @param {object} app - Amplenote API object.
    * @param {string} actionName - The invoked action identifier.
    * @param {object} [payload={}] - Additional action payload.
-   * @returns {Promise<any>}
+   * @returns {Promise<object>} - Action execution result containing success status and metadata.
    */
   async onEmbedCall(app, actionName, payload = {}) {
     const data = payload ?? {};

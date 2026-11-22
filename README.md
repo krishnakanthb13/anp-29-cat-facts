@@ -109,21 +109,72 @@ Tier 5: Safe Hardcoded Fallback String ─────────────�
 
 ---
 
-## 📦 Installation in Amplenote
+## 📦 Installation
 
-1. Create a new note in your Amplenote workspace named **`Plugin: Cat Facts`**.
-2. Add a table with the plugin metadata:
-   | Key | Value |
+Follow these steps to install and activate **Purrfect Cat Facts** in your Amplenote workspace:
+
+1. **Create a Plugin Note**: Create a new note in Amplenote named **`Purrfect Cat Facts Plugin`**.
+2. **Setup Metadata Table**: At the very top of the note, create a table with the following rows:
+
+   | Field | Value |
    | :--- | :--- |
-   | `name` | `Cat Facts` |
-   | `icon` | `pets` |
-   | `description` | `Smart cat facts with contextual photos powered by catfact.ninja` |
-3. In the code block below the metadata table, paste the bundled plugin code from [`build/cat-facts.compiled.js`](build/cat-facts.compiled.js).
-4. Save the note. The plugin is now ready!
+   | `name` | Purrfect Cat Facts |
+   | `description` | Intelligent feline wisdom with contextual photo matching, powered by catfact.ninja |
+   | `icon` | pets |
+
+3. **Add Settings**: No additional configuration or API keys are required! The plugin operates zero-configuration out of the box with live API resilience and local fallback defaults.
+4. **Insert Code Block**: Below the metadata table, create a single JavaScript code block (type ` ```javascript `).
+5. **Paste Compiled Code**: Copy the entire content from [`build/cat-facts.compiled.js`](build/cat-facts.compiled.js) and paste it inside that code block.
+6. **Activate**: Go to **Account Settings** -> **Plugins**, and select the **`Purrfect Cat Facts Plugin`** note you just created.
 
 ---
 
-## 💻 Architecture & Code Structure
+## 💡 Usage Guide
+
+### 1. Text Insertion Commands (`insertText`)
+Type `{` inside any Amplenote note, jot, or task to open the plugin insert menu:
+
+| Command | Output Description | Example Format |
+| :--- | :--- | :--- |
+| **`Random Cat Fact`** | Inserts a clean, single-line fact prefixed with an unobtrusive status dot (`🟢` for Live API, `💾` for Curated Library). | `🟢 Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.` |
+| **`Cat Fact Quote Card`** | Inserts a styled blockquote card displaying the semantic topic badge, status indicator, and fact body. | `> 🟢 **💤 Sleep & Rest**`<br>`> Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.` |
+| **`Cat Fact with Photo`** | Pairs the fact with a thematically matched cat photo in responsive markdown followed by the quote card. | `![💤 Sleep & Rest](https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=700&auto=format&fit=crop&q=80)`<br><br>`> 🟢 **💤 Sleep & Rest**`<br>`> Cats spend approximately 70% of their lives sleeping...` |
+
+### 2. Global Search Command (`appOption`)
+- Press <kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>Cmd</kbd>+<kbd>O</kbd> (or <kbd>Ctrl</kbd>+<kbd>J</kbd> / <kbd>Cmd</kbd>+<kbd>J</kbd>) to open Amplenote's Quick Search / Jump-to-Note.
+- Type **`Open Cat Facts`** and press <kbd>Enter</kbd>.
+- The dedicated **Peek Viewer** dashboard will instantly dock in your sidebar (or open in an embed frame).
+
+### 3. Interactive Peek Viewer Dashboard
+The dashboard is structured into 3 distinct cards designed for optimal vertical ergonomics in narrow sidebars (300px to 420px):
+
+1. **Card 1 (Fact Card - FIRST)**:
+   - **Category Pill Badge**: Displays the detected topic (e.g. `💤 Sleep & Rest`, `👁️ Vision & Senses`, `📡 Whiskers & Ears`).
+   - **Live API Telemetry**: Pulsing `🟢 Live API` indicator showing latency in milliseconds and provider (`catfact.ninja` or `meowfacts`), or `💾 Offline Library` fallback.
+   - **Click-to-Copy**: Click anywhere on the fact card to immediately copy the fact text to your clipboard.
+   - **Context Keyword Attribution**: Displays matched keywords that triggered the classification.
+2. **Card 2 (Image Card - SECOND)**:
+   - **Contextually Matched Cat Photo**: Displays a verified authentic cat photo matching the fact's topic.
+   - **Instant Image Shimmer**: Smooth skeleton shimmer prevents layout shift during image loading.
+   - **Preloaded Failover**: Automatic fallback to alternative verified photos if a network hiccup occurs.
+3. **Card 3 (Options & Actions Card - THIRD)**:
+   - **🐾 Next Fact Button**: Fetches a new fact with matched photo.
+   - **📋 Copy Fact Button**: Copies the fact to clipboard with visual toast confirmation.
+   - **📝 Insert Note Button**: Directly writes the formatted photo card into your currently open Amplenote note.
+   - **Smart Match Toggle**: Switch between contextual topic matching vs. pure random photos.
+   - **Live API Toggle**: Switch between live network retrieval vs. offline curated storage.
+
+### 4. Keyboard Shortcuts
+When the Peek Viewer dashboard is focused:
+- <kbd>Space</kbd> or <kbd>→</kbd> : Fetch the next cat fact and image.
+- <kbd>C</kbd> : Copy the current fact text to your clipboard.
+
+---
+
+## 💻 Architecture & Technical Details
+
+### 1. Modular Codebase Structure
+The codebase follows an ESM modular design separating API communication, classification logic, UI generation, and data persistence:
 
 ```
 anp-29-cat-facts/
@@ -136,12 +187,13 @@ anp-29-cat-facts/
 │   ├── utils.js                 # Single-pass HTML escaping, markdown formatting, array helpers
 │   └── data/
 │       ├── facts.js             # 139 verified curated cat facts & debloating loader
-│       ├── facts.json           # Debloated facts catalog
+│       ├── facts.json           # Debloated facts catalog (external asset)
 │       ├── images.js            # 70 verified authentic feline images with metadata
-│       └── images.json          # Debloated images catalog
+│       └── images.json          # Debloated images catalog (external asset)
 ├── test/
 │   ├── api.test.js              # API unit tests (mocked & failover)
 │   ├── classifier.test.js       # Classifier categorization & weight tests
+│   ├── embed.test.js            # Peek Viewer DOM & RPC interface tests
 │   ├── facts.test.js            # Facts dataset integrity & bounds tests
 │   ├── images.test.js           # 70-photo catalog validation tests
 │   ├── plugin.test.js           # Plugin actions & onEmbedCall payload tests
@@ -150,18 +202,34 @@ anp-29-cat-facts/
     └── cat-facts.compiled.js    # Production-ready IIFE bundle for Amplenote
 ```
 
+### 2. Dataset Debloating & Asset Hydration
+In compliance with the [Dataset Debloating Guide](../../common-issues-and-fixes/dataset-debloating.md):
+- Large JSON datasets (`facts.json` ~19.8 KB and `images.json` ~24.6 KB) are externalized during bundling to prevent bundle bloat.
+- Inlined starter seeds (`SEED_FACTS` with 10 facts, `SEED_IMAGES` with 11 photos) ensure instant zero-latency first paint on offline launch.
+- `loadFacts()` and `loadImages()` employ a 4-stage hydration pipeline: In-Memory Cache ➔ Browser `localStorage` ➔ Multi-CDN remote fetch (GitHub Raw + jsDelivr) ➔ Seed Fallback.
+
+### 3. Bundling & Compilation
+The plugin uses `esbuild` to compile ESM modules into a single self-contained Immediately Invoked Function Expression (IIFE) ready for pasting into an Amplenote note:
+- **Command**: `node esbuild.js 29`
+- **Output Target**: `build/cat-facts.compiled.js`
+- **Optimizations**: Target `es2020`, minified whitespace and bundle size ~48.8 KB.
+
 ---
 
 ## 🛠️ Development & Testing
 
 ```bash
-# Run all unit tests for this plugin (from repository root)
+# Run all 7 Jest test suites (from repository root)
 node --experimental-vm-modules node_modules/jest/bin/jest.js anp-29-cat-facts/test
 
-# Or from within the anp-29-cat-facts directory
+# Or run tests from within the anp-29-cat-facts directory
 npm test
 
-# Compile and bundle for Amplenote
+# Check code formatting and linting
+npx prettier --check anp-29-cat-facts/
+npx eslint anp-29-cat-facts/
+
+# Rebuild compiled distribution bundle
 node esbuild.js 29
 ```
 

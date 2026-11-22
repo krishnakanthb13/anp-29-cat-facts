@@ -1926,7 +1926,7 @@ var plugin = {
    * @param {object} app - Amplenote API object.
    * @param {string} actionName - The invoked action identifier.
    * @param {object} [payload={}] - Additional action payload.
-   * @returns {Promise<any>}
+   * @returns {Promise<object>} - Action execution result containing success status and metadata.
    */
   async onEmbedCall(app, actionName, payload = {}) {
     const data = payload ?? {};
