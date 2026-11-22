@@ -1,0 +1,23 @@
+{
+  "name": "anp-29-cat-facts",
+  "version": "1.0.0",
+  "description": "Purrfect Cat Facts - Amplenote plugin for smart contextual cat facts, 65+ high-res photos, Peek Viewer exploration dashboard, and live catfact.ninja integration.",
+  "main": "cat-facts.js",
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix .. run build 29",
+    "test": "node --experimental-vm-modules ../node_modules/jest/bin/jest.js test/"
+  },
+  "keywords": [
+    "amplenote",
+    "plugin",
+    "cat-facts",
+    "catfact.ninja",
+    "contextual-matching",
+    "peek-viewer",
+    "feline"
+  ],
+  "author": "Krishna Kanth B",
+  "license": "MIT"
+}
+
