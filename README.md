@@ -237,4 +237,4 @@ node esbuild.js 29
 
 ## 📜 License
 
-MIT License. Free to use, modify, and distribute.
+GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE) for full terms and conditions. Free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation.
