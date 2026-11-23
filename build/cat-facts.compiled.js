@@ -136,7 +136,6 @@ async function fetchOnlineFact(options = {}) {
     }
   } catch (err) {
     primaryError = err;
-    console.warn("[CatFacts] Primary API catfact.ninja failed:", err.message);
   }
   try {
     const data2 = await fetchJsonWithTimeout(MEOW_FACTS_API_URL, 4e3);
@@ -150,7 +149,6 @@ async function fetchOnlineFact(options = {}) {
       };
     }
   } catch (err2) {
-    console.warn("[CatFacts] Secondary API meowfacts failed:", err2.message);
   }
   throw primaryError || new Error("All live feline API endpoints failed");
 }
@@ -167,7 +165,6 @@ async function getCatFact(options = {}) {
         };
       }
     } catch (err) {
-      console.warn("[CatFacts] Live fetch from APIs failed, using curated fact fallback:", err.message);
     }
   }
   const fallback = getRandomFact(excludeFact);
@@ -772,18 +769,49 @@ function renderCatFactsEmbed(app, options = {}) {
       padding: 0;
     }
 
+    html {
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-dark) transparent;
+      -webkit-overflow-scrolling: touch;
+    }
+
     body {
       font-family: var(--font-family);
       background-color: var(--bg-primary);
       color: var(--text-primary);
-      padding: 7px 9px;
+      padding: 7px 9px 24px 9px;
       line-height: 1.45;
-      min-height: 100vh;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
       -webkit-font-smoothing: antialiased;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-dark) transparent;
+    }
+
+    /* WebKit & Blink custom scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-dark);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
     }
 
     .container {
@@ -792,6 +820,7 @@ function renderCatFactsEmbed(app, options = {}) {
       display: flex;
       flex-direction: column;
       gap: 7px;
+      padding-bottom: 16px;
     }
 
     /* Enhanced Emoji Typography */
@@ -1581,7 +1610,7 @@ function renderCatFactsEmbed(app, options = {}) {
               const data = await res.json();
               if (data && data.fact) {
                 const latency = Date.now() - startTime;
-                console.log("[CatFacts] \u{1F7E2} Live API Success (catfact.ninja):", data.fact, "(" + latency + "ms)");
+                // console.log("[CatFacts] \u{1F7E2} Live API Success (catfact.ninja):", data.fact, "(" + latency + "ms)");
                 return {
                   fact: data.fact.trim(),
                   source: "catfact.ninja",
@@ -1591,7 +1620,7 @@ function renderCatFactsEmbed(app, options = {}) {
               }
             }
           } catch (e) {
-            console.warn("[CatFacts] Primary catfact.ninja API failed:", e.message);
+            // console.warn("[CatFacts] Primary catfact.ninja API failed:", e.message);
           }
 
           // 2. Secondary endpoint: meowfacts.herokuapp.com
@@ -1606,7 +1635,7 @@ function renderCatFactsEmbed(app, options = {}) {
               const data2 = await res2.json();
               if (data2 && Array.isArray(data2.data) && data2.data[0]) {
                 const latency2 = Date.now() - startTime;
-                console.log("[CatFacts] \u{1F7E2} Secondary Live API Success (meowfacts):", data2.data[0], "(" + latency2 + "ms)");
+                // console.log("[CatFacts] \u{1F7E2} Secondary Live API Success (meowfacts):", data2.data[0], "(" + latency2 + "ms)");
                 return {
                   fact: data2.data[0].trim(),
                   source: "meowfacts",
@@ -1616,13 +1645,13 @@ function renderCatFactsEmbed(app, options = {}) {
               }
             }
           } catch (e2) {
-            console.warn("[CatFacts] Secondary meowfacts API failed:", e2.message);
+            // console.warn("[CatFacts] Secondary meowfacts API failed:", e2.message);
           }
         }
 
         // Offline curated library fallback
         factIndex = (factIndex + 1) % ALL_FACTS.length;
-        console.log("[CatFacts] \u{1F4BE} Serving from local curated collection:", ALL_FACTS[factIndex]);
+        // console.log("[CatFacts] \u{1F4BE} Serving from local curated collection:", ALL_FACTS[factIndex]);
         return {
           fact: ALL_FACTS[factIndex],
           source: "Curated Library",
@@ -1707,7 +1736,7 @@ function renderCatFactsEmbed(app, options = {}) {
             matchDetail.style.display = "none";
           }
         } catch (err) {
-          console.error("Update error:", err);
+          // console.error("Update error:", err);
         } finally {
           isLoading = false;
           btnNext.disabled = false;
@@ -1732,7 +1761,7 @@ function renderCatFactsEmbed(app, options = {}) {
             return;
           }
         } catch (e) {
-          console.warn("[CatFacts] navigator.clipboard failed, attempting fallback:", e);
+          // console.warn("[CatFacts] navigator.clipboard failed, attempting fallback:", e);
         }
 
         // Robust fallback for iframes or restricted environments
@@ -1782,7 +1811,7 @@ function renderCatFactsEmbed(app, options = {}) {
             showToast("Open in note to insert", "\u2139\uFE0F");
           }
         } catch (err) {
-          console.warn("[CatFacts] insertIntoNote failed:", err);
+          // console.warn("[CatFacts] insertIntoNote failed:", err);
           showToast("Failed to insert into note", "\u26A0\uFE0F");
         } finally {
           btnInsert.disabled = false;
@@ -1860,7 +1889,6 @@ async function launchCatFactsPeek(app) {
           {}
         );
       } catch (sidebarErr) {
-        console.warn("[CatFacts] openSidebarEmbed with options failed, attempting numeric fallback:", sidebarErr);
         opened = await app.openSidebarEmbed(1.1, {});
       }
       if (opened === false && typeof app.openEmbed === "function") {
@@ -1873,7 +1901,6 @@ async function launchCatFactsPeek(app) {
       await app.alert(fact, { preface: "Cat Fact" });
     }
   } catch (err) {
-    console.error("[CatFacts] Failed to open embed:", err);
     if (typeof app.alert === "function") {
       await app.alert(`Error launching Cat Facts: ${err.message || err}`);
     }
@@ -1884,10 +1911,9 @@ async function insertMarkdownOrFallback(app, markdown) {
     try {
       const replaced = await app.context.replaceSelection(markdown);
       if (replaced) {
-        return null;
+        return "";
       }
     } catch (err) {
-      console.warn("[CatFacts] replaceSelection failed, falling back to direct return:", err);
     }
   }
   return markdown;
@@ -1902,7 +1928,6 @@ async function insertPlainFact(app) {
     });
     return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
-    console.error("[CatFacts] insertPlainFact error:", err);
     return "\u{1F7E2} Cats sleep for roughly 70% of their lives.";
   }
 }
@@ -1919,7 +1944,6 @@ async function insertQuoteFact(app) {
     });
     return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
-    console.error("[CatFacts] insertQuoteFact error:", err);
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> Cats make over 100 different vocal sounds.\n";
   }
 }
@@ -1937,7 +1961,6 @@ async function insertPhotoFact(app) {
     });
     return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
-    console.error("[CatFacts] insertPhotoFact error:", err);
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }
@@ -1967,7 +1990,6 @@ var plugin = {
       const options = args[0] && typeof args[0] === "object" ? args[0] : {};
       return renderCatFactsEmbed(app, options);
     } catch (err) {
-      console.error("[CatFacts] renderEmbed error:", err);
       const safeErr = escapeHtml(err?.message || String(err));
       return `<!DOCTYPE html>
 <html>
@@ -2004,7 +2026,6 @@ var plugin = {
               return { success: true, method: "replaceSelection" };
             }
           } catch (e) {
-            console.warn("[CatFacts] replaceSelection failed, trying note insertion:", e);
           }
         }
         if (typeof app?.insertContent === "function") {
@@ -2012,7 +2033,6 @@ var plugin = {
             await app.insertContent(markdown);
             return { success: true, method: "insertContent" };
           } catch (e) {
-            console.warn("[CatFacts] insertContent failed:", e);
           }
         }
         const noteUUID = app?.context?.noteUUID;
@@ -2021,7 +2041,6 @@ var plugin = {
             await app.insertNoteContent({ uuid: noteUUID }, markdown);
             return { success: true, method: "insertNoteContent" };
           } catch (e) {
-            console.warn("[CatFacts] insertNoteContent failed:", e);
           }
         }
         return {

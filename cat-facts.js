@@ -29,7 +29,7 @@ async function launchCatFactsPeek(app) {
           {}
         );
       } catch (sidebarErr) {
-        console.warn("[CatFacts] openSidebarEmbed with options failed, attempting numeric fallback:", sidebarErr);
+        // console.warn("[CatFacts] openSidebarEmbed with options failed, attempting numeric fallback:", sidebarErr);
         opened = await app.openSidebarEmbed(1.1, {});
       }
 
@@ -44,7 +44,7 @@ async function launchCatFactsPeek(app) {
       await app.alert(fact, { preface: "Cat Fact" });
     }
   } catch (err) {
-    console.error("[CatFacts] Failed to open embed:", err);
+    // console.error("[CatFacts] Failed to open embed:", err);
     if (typeof app.alert === "function") {
       await app.alert(`Error launching Cat Facts: ${err.message || err}`);
     }
@@ -53,22 +53,23 @@ async function launchCatFactsPeek(app) {
 
 /**
  * Inserts markdown content via app.context.replaceSelection if available,
- * returning null to prevent Amplenote from escaping markdown syntax with backslashes.
+ * returning empty string to prevent Amplenote from escaping markdown syntax with backslashes
+ * and ensuring a valid String is returned to prevent TypeError on host message dispatch.
  * Falls back to returning the raw markdown string if replaceSelection is unavailable.
  *
  * @param {object} [app] - Amplenote API object.
  * @param {string} markdown - Markdown string to insert.
- * @returns {Promise<string|null>} null if replaced via replaceSelection, or the markdown string fallback.
+ * @returns {Promise<string>} Empty string if replaced via replaceSelection, or the markdown string fallback.
  */
 async function insertMarkdownOrFallback(app, markdown) {
   if (app?.context && typeof app.context.replaceSelection === "function") {
     try {
       const replaced = await app.context.replaceSelection(markdown);
       if (replaced) {
-        return null;
+        return "";
       }
     } catch (err) {
-      console.warn("[CatFacts] replaceSelection failed, falling back to direct return:", err);
+      // console.warn("[CatFacts] replaceSelection failed, falling back to direct return:", err);
     }
   }
   return markdown;
@@ -77,7 +78,7 @@ async function insertMarkdownOrFallback(app, markdown) {
 /**
  * Handles text insertion for random cat facts.
  * @param {object} [app] - Amplenote API object.
- * @returns {Promise<string|null>} Formatted markdown fact or null if replaced.
+ * @returns {Promise<string>} Formatted markdown fact or empty string if replaced.
  */
 async function insertPlainFact(app) {
   try {
@@ -89,7 +90,7 @@ async function insertPlainFact(app) {
     });
     return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
-    console.error("[CatFacts] insertPlainFact error:", err);
+    // console.error("[CatFacts] insertPlainFact error:", err);
     return "🟢 Cats sleep for roughly 70% of their lives.";
   }
 }
@@ -97,7 +98,7 @@ async function insertPlainFact(app) {
 /**
  * Handles text insertion for a formatted quote card.
  * @param {object} [app] - Amplenote API object.
- * @returns {Promise<string|null>} Formatted markdown quote card or null if replaced.
+ * @returns {Promise<string>} Formatted markdown quote card or empty string if replaced.
  */
 async function insertQuoteFact(app) {
   try {
@@ -112,7 +113,7 @@ async function insertQuoteFact(app) {
     });
     return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
-    console.error("[CatFacts] insertQuoteFact error:", err);
+    // console.error("[CatFacts] insertQuoteFact error:", err);
     return "> 🟢 **🐾 Cat Fact**\n> Cats make over 100 different vocal sounds.\n";
   }
 }
@@ -120,7 +121,7 @@ async function insertQuoteFact(app) {
 /**
  * Handles text insertion for a fact with a matched contextual photo.
  * @param {object} [app] - Amplenote API object.
- * @returns {Promise<string|null>} Formatted markdown photo card or null if replaced.
+ * @returns {Promise<string>} Formatted markdown photo card or empty string if replaced.
  */
 async function insertPhotoFact(app) {
   try {
@@ -136,7 +137,7 @@ async function insertPhotoFact(app) {
     });
     return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
-    console.error("[CatFacts] insertPhotoFact error:", err);
+    // console.error("[CatFacts] insertPhotoFact error:", err);
     return "> 🟢 **🐾 Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }
@@ -172,7 +173,7 @@ const plugin = {
       const options = (args[0] && typeof args[0] === "object") ? args[0] : {};
       return renderCatFactsEmbed(app, options);
     } catch (err) {
-      console.error("[CatFacts] renderEmbed error:", err);
+      // console.error("[CatFacts] renderEmbed error:", err);
       const safeErr = escapeHtml(err?.message || String(err));
       return `<!DOCTYPE html>
 <html>
@@ -212,7 +213,7 @@ const plugin = {
               return { success: true, method: "replaceSelection" };
             }
           } catch (e) {
-            console.warn("[CatFacts] replaceSelection failed, trying note insertion:", e);
+            // console.warn("[CatFacts] replaceSelection failed, trying note insertion:", e);
           }
         }
 
@@ -222,7 +223,7 @@ const plugin = {
             await app.insertContent(markdown);
             return { success: true, method: "insertContent" };
           } catch (e) {
-            console.warn("[CatFacts] insertContent failed:", e);
+            // console.warn("[CatFacts] insertContent failed:", e);
           }
         }
 
@@ -233,7 +234,7 @@ const plugin = {
             await app.insertNoteContent({ uuid: noteUUID }, markdown);
             return { success: true, method: "insertNoteContent" };
           } catch (e) {
-            console.warn("[CatFacts] insertNoteContent failed:", e);
+            // console.warn("[CatFacts] insertNoteContent failed:", e);
           }
         }
 

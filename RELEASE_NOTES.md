@@ -1,6 +1,18 @@
 # Release Notes: Purrfect Cat Facts
 
-## v0.0.11 (2026-11-23)
+## v0.0.13 (2026-11-23)
+
+### 🐛 Bug Fixes & Refinements
+- **Re-enabled Vertical Scrolling in Peek Viewer Embed**:
+  - Restored full vertical scrolling in `lib/embed.js` by setting `html` and `body` to `overflow-y: auto; height: 100%; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;`.
+  - Added subtle custom scrollbar styling (`::-webkit-scrollbar` with 6px width and rounded thumb) matching active light/dark themes.
+  - Added extra bottom padding to `.container` (`24px` on body, `16px` on container) ensuring Card 3 controls and shortcuts are never clipped in narrow or short sidebar viewports.
+- **Commented Out All Runtime Console Statements**:
+  - Cleaned up `cat-facts.js`, `lib/embed.js`, `lib/api.js`, `lib/data/facts.js`, and `lib/data/images.js` by commenting out all active `console.log`, `console.warn`, and `console.error` invocations to eliminate noise in Amplenote developer console.
+- **Fixed `TypeError: Cannot read properties of null (reading 'name')` / `(reading 'tags')`**:
+  - Updated `insertMarkdownOrFallback` in `cat-facts.js` to return `""` (empty string) instead of `null` when selection replacement succeeds. This satisfies Amplenote's `insertText` String return contract and prevents `note_editor_app`'s postMessage dispatcher from crashing on `null`.
+
+## v0.0.12 (2026-11-23)
 
 ### 🐛 Bug Fixes & Refinements
 - **Streamlined Action Option Names (No Repetition)**:

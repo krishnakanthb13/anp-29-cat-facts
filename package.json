@@ -1,6 +1,6 @@
 {
   "name": "anp-29-cat-facts",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Purrfect Cat Facts - Amplenote plugin for smart contextual cat facts, 65+ high-res photos, Peek Viewer exploration dashboard, and live catfact.ninja integration.",
   "main": "cat-facts.js",
   "type": "module",

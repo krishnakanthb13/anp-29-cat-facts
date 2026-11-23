@@ -44,26 +44,26 @@ describe("cat-facts.js Plugin Entry Point", () => {
       expect(mockApp.context.replaceSelection).toHaveBeenCalled();
       const inserted = mockApp.context.replaceSelection.mock.calls[0][0];
       expect(inserted.startsWith("🟢 ") || inserted.startsWith("💾 ")).toBe(true);
-      expect(result).toBeNull();
+      expect(result).toBe("");
     });
 
-    test("Quote Card replaces selection with markdown quote block and returns null to prevent escaping", async () => {
+    test("Quote Card replaces selection with markdown quote block and returns empty string to prevent escaping", async () => {
       const result = await plugin.insertText["Quote Card"](mockApp);
       expect(mockApp.context.replaceSelection).toHaveBeenCalled();
       const inserted = mockApp.context.replaceSelection.mock.calls[0][0];
       expect(inserted).toContain("> ");
       expect(inserted.includes("🟢") || inserted.includes("💾")).toBe(true);
-      expect(result).toBeNull();
+      expect(result).toBe("");
     });
 
-    test("Photo Card replaces selection with markdown photo and quote and returns null", async () => {
+    test("Photo Card replaces selection with markdown photo and quote and returns empty string", async () => {
       const result = await plugin.insertText["Photo Card"](mockApp);
       expect(mockApp.context.replaceSelection).toHaveBeenCalled();
       const inserted = mockApp.context.replaceSelection.mock.calls[0][0];
       expect(inserted).toContain("![");
       expect(inserted.includes("https://images.unsplash.com/") || inserted.includes("https://cdn2.thecatapi.com/")).toBe(true);
       expect(inserted).toContain("> ");
-      expect(result).toBeNull();
+      expect(result).toBe("");
     });
 
     test("insertText options fall back to returning markdown string when replaceSelection is unavailable", async () => {
