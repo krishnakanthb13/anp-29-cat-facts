@@ -124,31 +124,6 @@ describe("cat-facts.js Plugin Entry Point", () => {
   });
 
   describe("onEmbedCall Execution", () => {
-    test("handles insertIntoNote using replaceSelection", async () => {
-      const res = await plugin.onEmbedCall(mockApp, "insertIntoNote", {
-        fact: "Cats have a flexible spine with 53 vertebrae.",
-        imageUrl: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=700",
-        category: "Anatomy & Biology",
-        style: "card_with_image"
-      });
-
-      expect(res.success).toBe(true);
-      expect(res.method).toBe("replaceSelection");
-      expect(mockApp.context.replaceSelection).toHaveBeenCalled();
-    });
-
-    test("falls back to insertContent when replaceSelection fails", async () => {
-      mockApp.context.replaceSelection.mockResolvedValue(false);
-      const res = await plugin.onEmbedCall(mockApp, "insertIntoNote", {
-        fact: "Cats sleep 70% of their life.",
-        style: "plain"
-      });
-
-      expect(res.success).toBe(true);
-      expect(res.method).toBe("insertContent");
-      expect(mockApp.insertContent).toHaveBeenCalled();
-    });
-
     test("handles notify action", async () => {
       const res = await plugin.onEmbedCall(mockApp, "notify", {
         message: "Hello cat lover!",
@@ -167,9 +142,6 @@ describe("cat-facts.js Plugin Entry Point", () => {
     test("handles null or undefined payload safely without throwing", async () => {
       const resNotify = await plugin.onEmbedCall(mockApp, "notify", null);
       expect(resNotify.success).toBe(true);
-
-      const resInsert = await plugin.onEmbedCall(mockApp, "insertIntoNote", null);
-      expect(resInsert.success).toBe(true);
     });
   });
 });

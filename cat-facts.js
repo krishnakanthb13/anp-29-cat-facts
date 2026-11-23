@@ -195,55 +195,6 @@ const plugin = {
   async onEmbedCall(app, actionName, payload = {}) {
     const data = payload ?? {};
     switch (actionName) {
-      case "insertIntoNote": {
-        const { fact, imageUrl, category, badge, isLive = true, style = "card_with_image" } = data;
-        const markdown = formatFactMarkdown(fact, {
-          style,
-          imageUrl,
-          category,
-          badge,
-          isLive
-        });
-
-        // 1. Try cursor / selection replacement
-        if (app?.context && typeof app.context.replaceSelection === "function") {
-          try {
-            const success = await app.context.replaceSelection(markdown);
-            if (success) {
-              return { success: true, method: "replaceSelection" };
-            }
-          } catch (e) {
-            // console.warn("[CatFacts] replaceSelection failed, trying note insertion:", e);
-          }
-        }
-
-        // 2. Try app.insertContent
-        if (typeof app?.insertContent === "function") {
-          try {
-            await app.insertContent(markdown);
-            return { success: true, method: "insertContent" };
-          } catch (e) {
-            // console.warn("[CatFacts] insertContent failed:", e);
-          }
-        }
-
-        // 3. Try app.insertNoteContent on active note
-        const noteUUID = app?.context?.noteUUID;
-        if (noteUUID && typeof app?.insertNoteContent === "function") {
-          try {
-            await app.insertNoteContent({ uuid: noteUUID }, markdown);
-            return { success: true, method: "insertNoteContent" };
-          } catch (e) {
-            // console.warn("[CatFacts] insertNoteContent failed:", e);
-          }
-        }
-
-        return {
-          success: false,
-          error: "Please open or focus a note to insert this fact."
-        };
-      }
-
       case "notify": {
         if (typeof app?.alert === "function") {
           await app.alert(data.message || "", { preface: data.preface || "Cat Facts" });

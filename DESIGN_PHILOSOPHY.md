@@ -16,7 +16,7 @@ External APIs can experience latency, network interruptions, or rate limits. A h
 
 ### 1.4 Non-Destructive Workspace Safety
 - **Read-Safe Execution**: The plugin never deletes, overwrites, or modifies notes without explicit user initiation.
-- **Explicit Insertion**: Text and image insertions only occur when explicitly triggered by the user via the `{` menu or the **Insert Note** button in Peek Viewer.
+- **Explicit Insertion**: Text and image insertions only occur when explicitly triggered by the user via the `{` menu options (`Random`, `Quote Card`, `Photo Card`).
 - **Zero Tracking / Data Privacy**: No user notes, titles, or tags are logged, tracked, or transmitted. Live API requests contain zero personal data or identifiable headers.
 
 ### 1.5 Ergonomic UI Design for Narrow Sidebars
@@ -34,7 +34,7 @@ Amplenote plugins execute within a rich note-taking environment where keystrokes
 
 ### 1.7 Markdown Fidelity & Clean Note Insertion
 Amplenote's note editor parses strings returned from `insertText` as plain text, escaping markdown syntax characters with backslashes (`\>`, `\*\*`, `!\[`) to prevent accidental note formatting.
-- **Native GFM Preservation**: Rich formatting (such as blockquotes `> ` and contextual photos `![alt](url)`) must be inserted through `app.context.replaceSelection(markdown)` and return `null`.
+- **Native GFM Preservation**: Rich formatting (such as blockquotes `> ` and contextual photos `![alt](url)`) must be inserted through `app.context.replaceSelection(markdown)` and return `""` (empty string) to satisfy the string contract and prevent host null reference errors.
 - **Zero-Clutter Delivery**: This ensures quotes and images render directly as native ProseMirror rich-text elements without backslash artifacts.
 - **Resilient Fallback**: If `replaceSelection` is unavailable or throws, the plugin gracefully falls back to returning raw markdown, ensuring no user action ever results in silent failure.
 

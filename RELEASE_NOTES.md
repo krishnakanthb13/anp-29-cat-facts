@@ -1,5 +1,12 @@
 # Release Notes: Purrfect Cat Facts
 
+## v0.0.14 (2026-11-23)
+
+- **Removed Non-Functional "Insert Note" Button**:
+  - Removed the non-functional `Insert Note` button and `insertIntoNote` RPC handler from the Peek Viewer HTML dashboard and manifest. The dashboard features a clean, focused 2-column action layout (**🐾 Next Fact** and **📋 Copy Fact**).
+- **Cleaned Up Project Documentation**:
+  - Thoroughly audited and synchronized documentation across `README.md`, `CODE_DOCUMENTATION.md`, `DESIGN_PHILOSOPHY.md`, `RELEASE_NOTES.md`, and tutorial scripts, eliminating obsolete references and maintaining 100% fidelity with the live codebase.
+
 ## v0.0.13 (2026-11-23)
 
 ### 🐛 Bug Fixes & Refinements
@@ -23,9 +30,7 @@
   - Converted `appOption` to a standard dictionary (`"Open Cat Facts"`), making the dashboard command discoverable in Quick Search / Jump-to-Note.
 - **Markdown Escaping Resolution via `replaceSelection`**:
   - Implemented `insertMarkdownOrFallback`: uses `await app.context.replaceSelection(markdown)` and returns `null` so Amplenote renders rich blockquotes, bold badges, and contextual photos natively without escaping markdown syntax with backslashes (`\>`, `\*\*`, `!\[\]\(\)`).
-- **Peek Viewer "Insert Note" Button & Keyboard Shortcut**:
-  - Added the `📝 Insert Note` button to Card 3, executing `window.callAmplenotePlugin("insertIntoNote", payload)` with visual toast feedback.
-  - Added <kbd>I</kbd> keyboard shortcut for one-key insertion into the focused note.
+- **Peek Viewer Action Controls & Latency Telemetry**:
   - Added round-trip response latency display (`.latency-ms`) directly inside the `🟢 Live API` badge.
 
 ## v0.0.10 (2026-11-22)
@@ -55,7 +60,7 @@ Purrfect Cat Facts brings delightful feline wisdom and contextual photo matching
 - **Real-Time Live API Telemetry**:
   - Pulsing `🟢 Live API` status badge showing active upstream provider (`catfact.ninja` or `meowfacts`) and round-trip response latency in milliseconds.
 - **Interactive Action Controls & Toggles**:
-  - Quick action buttons: **🐾 Next Fact**, **📋 Copy Fact**, and **📝 Insert Note** (writes directly into the currently focused Amplenote note).
+  - Quick action buttons: **🐾 Next Fact** and **📋 Copy Fact** (copies fact to clipboard with visual toast feedback).
   - Toggles for **Smart Match** (thematic matching vs random) and **Live API** (live network queries vs curated offline library).
   - Accessible keyboard shortcuts: <kbd>Space</kbd> or <kbd>→</kbd> for Next Fact, <kbd>C</kbd> to copy.
 

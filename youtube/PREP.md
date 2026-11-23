@@ -59,7 +59,6 @@ PEEK VIEWER SIDEBAR DASHBOARD (appOption)
 * Click-to-Copy: Click anywhere across the fact card body to immediately copy the fact text to your clipboard with instant toast feedback.
 * Contextual Thematic Matching: NLP classifier analyzes facts across 11 distinct domains (Sleep, Eyes & Vision, Whiskers & Ears, Kittens, Agility, Purring, Grooming, Hunting, Black Cats, History, and Anatomy) to dynamically match the visual photo.
 * 70 Audited Feline Photos: 100% verified authentic cat photos with zero dogs, zero controllers, zero cars, and zero dead links.
-* Direct Note Insertion: One-click "Insert Note" button writes formatted cards directly into your currently focused Amplenote note.
 * Keyboard Accessibility: Quick browsing via Space or Right Arrow for the next fact, and C to copy to clipboard.
 
 #Amplenote #PKM #ProductivityTools #NoteTaking #CatFacts #PeekViewer #WritingTools #DelightfulProductivity
@@ -121,7 +120,7 @@ Card One is the Fact Card, positioned right at the top. Here, you see the topic 
 
 [clear enunciate] Card Three is the Options Card at the bottom.
 
-Here, you have quick action buttons to fetch the next fact, copy the current fact, or click Insert Note to write the active photo card directly into your open Amplenote note. Below the buttons, you will find two helpful switches: the Smart Match toggle lets you alternate between contextual topic matching and pure random photos, while the Live A-P-I toggle lets you switch between live network queries and the curated offline collection. You can also use handy keyboard shortcuts: tap the Space bar or Right Arrow for the next fact, or press the C key to copy.
+Here, you have quick action buttons to fetch the next fact or copy the current fact to your clipboard. Below the buttons, you will find two helpful switches: the Smart Match toggle lets you alternate between contextual topic matching and pure random photos, while the Live A-P-I toggle lets you switch between live network queries and the curated offline collection. You can also use handy keyboard shortcuts: tap the Space bar or Right Arrow for the next fact, or press the C key to copy.
 
 <long pause>
 
@@ -216,7 +215,6 @@ Here, you have quick action buttons to fetch the next fact, copy the current fac
 > Here, you have quick action buttons:
 > - Click **🐾 Next Fact** to load a new fact and matching image.
 > - Click **📋 Copy Fact** to copy text with toast confirmation.
-> - Click **📝 Insert Note** to write the active photo card directly into your currently open Amplenote note.
 > 
 > Below the buttons, you will find two helpful switches:
 > - The **Smart Match** toggle lets you alternate between contextual topic matching and pure random photos.
@@ -225,7 +223,7 @@ Here, you have quick action buttons to fetch the next fact, copy the current fac
 > You can also use handy keyboard shortcuts: tap the <kbd>Space</kbd> bar or <kbd>→</kbd> Right Arrow for the next fact, or press the <kbd>C</kbd> key to copy."
 > 
 > **TL;DR Controls**:
-> - **Actions**: Next Fact, Copy Fact, and Direct Note Insertion.
+> - **Actions**: Next Fact and Copy Fact.
 > - **Smart Match Toggle**: Contextual topic matching vs. random browsing.
 > - **Live API Toggle**: Live network queries vs. offline curated storage.
 > - **Shortcuts**: <kbd>Space</kbd> / <kbd>→</kbd> for Next; <kbd>C</kbd> to copy.

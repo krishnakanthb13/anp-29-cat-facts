@@ -160,7 +160,6 @@ The dashboard is structured into 3 distinct cards designed for optimal vertical 
 3. **Card 3 (Options & Actions Card - THIRD)**:
    - **🐾 Next Fact Button**: Fetches a new fact with matched photo.
    - **📋 Copy Fact Button**: Copies the fact to clipboard with visual toast confirmation.
-   - **📝 Insert Note Button**: Directly writes the formatted photo card into your currently open Amplenote note.
    - **Smart Match Toggle**: Switch between contextual topic matching vs. pure random photos.
    - **Live API Toggle**: Switch between live network retrieval vs. offline curated storage.
 
@@ -168,7 +167,6 @@ The dashboard is structured into 3 distinct cards designed for optimal vertical 
 When the Peek Viewer dashboard is focused:
 - <kbd>Space</kbd> or <kbd>→</kbd> : Fetch the next cat fact and image.
 - <kbd>C</kbd> : Copy the current fact text to your clipboard.
-- <kbd>I</kbd> : Insert the fact and photo directly into your focused note.
 
 ---
 

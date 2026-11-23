@@ -54,9 +54,6 @@
   - Fallback to `app.alert` when embed APIs are missing.
   - Null/missing `app` safety.
 - **onEmbedCall Execution**:
-  - `insertIntoNote` with `replaceSelection` cursor strategy.
-  - Fallback to `insertContent`.
-  - Fallback to `insertNoteContent`.
   - `notify` action with preface and message.
   - Defensive handling of `null` and `undefined` payloads without throwing.
 

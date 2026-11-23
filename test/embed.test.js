@@ -42,20 +42,12 @@ describe("embed.js — Peek Viewer HTML Embed Generator", () => {
       const html = renderCatFactsEmbed(mockApp, {});
       expect(html).toContain("id=\"btnNext\"");
       expect(html).toContain("id=\"btnCopy\"");
-      expect(html).toContain("id=\"btnInsert\"");
       expect(html).toContain("id=\"toggleSmart\"");
       expect(html).toContain("id=\"toggleLive\"");
       expect(html).toContain("id=\"factBody\"");
       expect(html).toContain("id=\"catImg\"");
       expect(html).toContain("id=\"imgSkeleton\"");
       expect(html).toContain("id=\"toast\"");
-    });
-
-    test("includes the Insert Note button for note integration", () => {
-      const html = renderCatFactsEmbed(mockApp, {});
-      expect(html).toContain("id=\"btnInsert\"");
-      expect(html).toContain("Insert Note");
-      expect(html).toContain("insertIntoNote");
     });
 
     test("includes the enlarged emoji typography classes", () => {

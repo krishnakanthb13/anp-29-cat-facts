@@ -1129,18 +1129,18 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .primary-btn-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      padding: 7px 6px;
+      gap: 6px;
+      padding: 7px 11px;
       border-radius: var(--radius-sm);
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       border: 1px solid transparent;
@@ -1369,10 +1369,6 @@ function renderCatFactsEmbed(app, options = {}) {
           <span class="emoji-icon">\u{1F4CB}</span>
           <span>Copy Fact</span>
         </button>
-        <button class="btn btn-secondary" id="btnInsert" title="Insert into active note (Shortcut: I)">
-          <span class="emoji-icon">\u{1F4DD}</span>
-          <span>Insert Note</span>
-        </button>
       </div>
 
       <!-- Toggles -->
@@ -1394,7 +1390,7 @@ function renderCatFactsEmbed(app, options = {}) {
       </div>
 
       <div class="shortcut-hint">
-        Press <kbd>Space</kbd> next \u2022 <kbd>C</kbd> copy \u2022 <kbd>I</kbd> insert
+        Press <kbd>Space</kbd> for next \u2022 <kbd>C</kbd> or click fact to copy
       </div>
     </div>
   </div>
@@ -1487,7 +1483,6 @@ function renderCatFactsEmbed(app, options = {}) {
       const matchDetail = document.getElementById("matchDetail");
       const btnNext = document.getElementById("btnNext");
       const btnCopy = document.getElementById("btnCopy");
-      const btnInsert = document.getElementById("btnInsert");
       const toggleSmart = document.getElementById("toggleSmart");
       const toggleLive = document.getElementById("toggleLive");
       const toast = document.getElementById("toast");
@@ -1786,42 +1781,9 @@ function renderCatFactsEmbed(app, options = {}) {
         }
       }
 
-      // Insert fact into active Amplenote note
-      async function insertIntoNote() {
-        if (!currentFact) return;
-        btnInsert.disabled = true;
-        try {
-          if (typeof window.callAmplenotePlugin === "function") {
-            const res = await window.callAmplenotePlugin("insertIntoNote", {
-              fact: currentFact,
-              imageUrl: currentImage ? currentImage.url : null,
-              category: currentClassification ? currentClassification.label : null,
-              badge: currentClassification ? currentClassification.badge : null,
-              isLive: isCurrentFactLive,
-              style: "card_with_image"
-            });
-            if (res && res.success) {
-              showToast("Inserted into note!", "\u{1F4DD}");
-            } else if (res && res.error) {
-              showToast(res.error, "\u26A0\uFE0F");
-            } else {
-              showToast("Inserted into note!", "\u{1F4DD}");
-            }
-          } else {
-            showToast("Open in note to insert", "\u2139\uFE0F");
-          }
-        } catch (err) {
-          // console.warn("[CatFacts] insertIntoNote failed:", err);
-          showToast("Failed to insert into note", "\u26A0\uFE0F");
-        } finally {
-          btnInsert.disabled = false;
-        }
-      }
-
       // Event Listeners
       btnNext.addEventListener("click", updateDisplay);
       btnCopy.addEventListener("click", copyFact);
-      btnInsert.addEventListener("click", insertIntoNote);
       factBody.addEventListener("click", copyFact);
 
       toggleSmart.addEventListener("change", function(e) {
@@ -1864,8 +1826,6 @@ function renderCatFactsEmbed(app, options = {}) {
           // Allow normal copy
         } else if (e.code === "KeyC") {
           copyFact();
-        } else if (e.code === "KeyI" && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          insertIntoNote();
         }
       });
 
@@ -2010,44 +1970,6 @@ var plugin = {
   async onEmbedCall(app, actionName, payload = {}) {
     const data = payload ?? {};
     switch (actionName) {
-      case "insertIntoNote": {
-        const { fact, imageUrl, category, badge, isLive = true, style = "card_with_image" } = data;
-        const markdown = formatFactMarkdown(fact, {
-          style,
-          imageUrl,
-          category,
-          badge,
-          isLive
-        });
-        if (app?.context && typeof app.context.replaceSelection === "function") {
-          try {
-            const success = await app.context.replaceSelection(markdown);
-            if (success) {
-              return { success: true, method: "replaceSelection" };
-            }
-          } catch (e) {
-          }
-        }
-        if (typeof app?.insertContent === "function") {
-          try {
-            await app.insertContent(markdown);
-            return { success: true, method: "insertContent" };
-          } catch (e) {
-          }
-        }
-        const noteUUID = app?.context?.noteUUID;
-        if (noteUUID && typeof app?.insertNoteContent === "function") {
-          try {
-            await app.insertNoteContent({ uuid: noteUUID }, markdown);
-            return { success: true, method: "insertNoteContent" };
-          } catch (e) {
-          }
-        }
-        return {
-          success: false,
-          error: "Please open or focus a note to insert this fact."
-        };
-      }
       case "notify": {
         if (typeof app?.alert === "function") {
           await app.alert(data.message || "", { preface: data.preface || "Cat Facts" });
