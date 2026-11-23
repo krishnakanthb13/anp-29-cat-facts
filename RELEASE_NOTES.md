@@ -1,5 +1,27 @@
 # Release Notes: Purrfect Cat Facts
 
+## v0.0.15 (2026-11-23)
+
+### 🐛 Bug Fixes & Integrity
+- **Prevented duplicate insertions**: `insertMarkdownOrFallback` now treats a non-throwing `replaceSelection` as success and returns `""`, even if the host resolves `undefined`. Previously a successful replacement followed by a falsy return value could insert the markdown a second time.
+- **Fixed classifier substring false positives**: keyword matching now uses a shared whole-word helper (`hasWholeWordMatch`) in both `lib/classifier.js` and the embed. `heart`/`earthquake`/`earliest`/`year` no longer match `ear`/`hear`, and `eye`/`eyes` (plus other overlapping pairs) no longer double-score one occurrence. Added heart-rate keywords (`heart beats`, `heartbeat`, `beats`).
+- **Wired the dataset hydration loaders into the runtime**: a memoized `hydrateDatasets()` warm-up now calls `loadFacts()` and `loadImages()` from insert actions and the Peek Viewer launch, so the full curated catalog is actually used and no longer dead code.
+- **Bounded dataset requests**: `fetchJsonWithTimeout` moved to `lib/utils.js` and is shared by the live API plus both loaders (6s abort timeout). Payloads are shape-validated and `localStorage` caches are only accepted when larger than the inlined seed.
+- **Corrected `getFactByIndex` negative wrapping** (true modulo), and fixed the corrupted fact, duplicate entries, and "tempetature" typo in `facts.json` (137 unique facts).
+- **Recategorized images**: non-black photos (calico/tortie, grey, generic coat-genetics) moved out of `black_cat` into `anatomy` so the badge matches the pictures.
+
+### 🛡️ Embed Hardening
+- Seed/category JSON is injected through `serializeForScript()` (escapes `<`, `>`, `&`).
+- Remote dataset hydration now has a jsDelivr fallback, shape validation, and abort timeouts.
+- Added a `pendingRefresh` queue so toggling Live API while loading is honored instead of ignored.
+- Keyboard shortcuts are ignored while a form control has focus (no double-fetch).
+- Image `onerror` fallbacks guard against an empty catalog.
+
+### 🧪 Tests & Docs
+- `plugin.test.js` now mocks `fetch` (deterministic, no real network; suite runtime dropped from ~8s to ~4s).
+- Added whole-word classifier regressions and negative-index coverage: **78 passing tests / 7 suites**.
+- Synchronized `README.md`, `CODE_DOCUMENTATION.md`, `DESIGN_PHILOSOPHY.md`, `SECURITY.md`, and the test report (137 facts, 70 images, ~64.5 KB bundle, 78 tests).
+
 ## v0.0.14 (2026-11-23)
 
 - **Removed Non-Functional "Insert Note" Button**:

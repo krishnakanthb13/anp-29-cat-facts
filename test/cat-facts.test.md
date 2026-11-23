@@ -1,6 +1,6 @@
 # Test Report — Purrfect Cat Facts (`anp-29-cat-facts`)
 
-**Date**: 2026-11-22  
+**Date**: 2026-11-23  
 **Auditor**: Agent (`scaffold_tests` + `anp_test`)  
 **Scope**: `anp-29-cat-facts/test/`  
 **Target Bundle**: `anp-29-cat-facts/build/cat-facts.compiled.js`
@@ -12,8 +12,8 @@
 | Metric | Result |
 |:---|:---|
 | **Total Test Suites** | 7 / 7 ✅ |
-| **Total Tests** | 76 |
-| **Passed** | 76 ✅ |
+| **Total Tests** | 78 |
+| **Passed** | 78 ✅ |
 | **Failed** | 0 ❌ |
 | **Skipped** | 0 ⚠️ |
 | **Pass Rate** | **100%** |
@@ -40,14 +40,16 @@
   - Image `referrerpolicy="no-referrer"` enforced.
   - External links include `rel="noopener"`.
 
-### 2.2 `test/plugin.test.js` (17 Tests)
+### 2.2 `test/plugin.test.js` (16 Tests)
 - **Plugin Exports Structure**:
   - Verified required Amplenote action handlers (`insertText`, `appOption`, `renderEmbed`, `onEmbedCall`).
-  - Named `insertText` options (`Random Cat Fact`, `Cat Fact Quote Card`, `Cat Fact with Photo`).
-  - Named `appOption` handler (`Open Cat Facts`).
+  - Named `insertText` options (`Random`, `Quote Card`, `Photo Card`).
+  - Named `appOption` handler (`Open Peek Viewer`).
 - **insertText Execution**:
   - Live indicator dots (`🟢`, `💾`) and absence of cluttered markdown URLs.
   - Markdown block quotes, image markdown, and default fallback.
+  - `replaceSelection` resolving `undefined` without throwing returns `""` (no duplicate insertion).
+  - `fetch` is mocked, so the suite never touches the real network.
 - **appOption Execution**:
   - `app.openSidebarEmbed` invocation with options `{ id: "cat-facts-peek", aspectRatio: 1.1 }`.
   - Fallback to `app.openEmbed` when sidebar is unavailable (mobile).
@@ -68,11 +70,12 @@
   - Direct offline curated fact retrieval when `preferOnline: false`.
   - `excludeFact` parameter avoidance to prevent consecutive duplicates.
 
-### 2.4 `test/classifier.test.js` (16 Tests)
+### 2.4 `test/classifier.test.js` (19 Tests)
 - **classifyFact**:
   - 11 thematic domains classified: `sleep`, `eyes`, `whiskers_senses`, `kittens`, `play_agility`, `purr_vocal`, `grooming`, `hunting_wild`, `black_cat`, `history_regal`, `anatomy`.
   - Fallback to `general` category (`🐱 Feline Wisdom`) for ambiguous facts.
   - Empty string, null, and non-string input guards.
+  - **Whole-word regressions**: `heart`/`earthquake`/`earliest` never match `ear`/`hear`; `eye`/`eyes` do not double-score one occurrence; heart-rate facts resolve to `anatomy`.
 - **selectImageForFact**:
   - Contextual selection matching fact themes.
   - `forceRandom: true` bypass.
@@ -80,9 +83,9 @@
 
 ### 2.5 `test/facts.test.js` (6 Tests)
 - **SEED_FACTS**: Verified starter wisdom integrity.
-- **facts.json**: Verified 100+ (139) unique facts.
-- **loadFacts**: Hydration via fetch and persistent localStorage.
-- **getFactByIndex**: Bounds checking and wrap-around normalization.
+- **facts.json**: Verified 100+ (137) unique facts.
+- **loadFacts**: Hydration via fetch and persistent localStorage (validated, seed-size floor).
+- **getFactByIndex**: Bounds checking plus true-modulo wrap-around for positive, oversize, negative, and NaN indices.
 - **getRandomFact**: Non-repeating random selection.
 
 ### 2.6 `test/images.test.js` (7 Tests)
@@ -103,6 +106,9 @@
 ## 3. Regression & Integrity Analysis
 
 - **Behavioral Equivalence**: All refactored methods continue to pass their original contracts with 0 regressions.
+- **Duplicate-Insertion Guard**: A non-throwing `replaceSelection` that resolves `undefined` is treated as success, preventing the markdown from being inserted twice.
+- **Classifier Precision**: Whole-word matching eliminates substring false positives (`heart` ≠ `ear`) and overlap double-counting in both the Node and browser implementations.
+- **Deterministic Execution**: `fetch` is mocked in `plugin.test.js`; the full suite now runs in ~4s with no network dependency.
 - **Emoji Typography**: Verified that enlarged emoji styles (`.emoji-icon`, `.emoji-lg`) render cleanly in the generated embed markup.
 - **Defensive Robustness**: Nullish payload guards and optional chaining prevent unhandled promise rejections across all host RPC actions.
 

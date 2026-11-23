@@ -58,7 +58,7 @@ Open the dedicated Cat Facts dashboard directly in Amplenote's **Peek Viewer** s
 
 ### 3. 🧠 The Contextual Matching Engine
 
-When a fact is retrieved (either live from `catfact.ninja` or from local storage), the semantic classifier identifies core feline topics:
+When a fact is retrieved (either live from `catfact.ninja` or from local storage), the semantic classifier identifies core feline topics. Keywords are matched on **whole-word boundaries** (never substrings), so a fact about the `heart` is never mistaken for one about `ears`, and overlapping tokens such as `eye`/`eyes` are not double-counted:
 
 | Category | Emoji Badge | Sample Keywords | Example Fact |
 | :--- | :--- | :--- | :--- |
@@ -90,7 +90,7 @@ Tier 1: Primary Live API (catfact.ninja) ──(Down / Timeout > 6s)──┐
 Tier 2: Secondary Live API (meowfacts) ────(Down / Timeout > 4s)──┐
                                                                   │
                                                                   ▼
-Tier 3: Browser Storage Cache (localStorage: 139 facts) ──(Empty)─┐
+Tier 3: Browser Storage Cache (localStorage: 137 facts) ──(Empty)─┐
                                                                   │
                                                                   ▼
 Tier 4: Inlined Starter Seed (SEED_FACTS: 10 curated facts) ─────► [Render Fact]
@@ -185,7 +185,7 @@ anp-29-cat-facts/
 │   ├── embed.js                 # Peek Viewer HTML/CSS/JS dashboard generator
 │   ├── utils.js                 # Single-pass HTML escaping, markdown formatting, array helpers
 │   └── data/
-│       ├── facts.js             # 139 verified curated cat facts & debloating loader
+│       ├── facts.js             # 137 verified curated cat facts & debloating loader
 │       ├── facts.json           # Debloated facts catalog (external asset)
 │       ├── images.js            # 70 verified authentic feline images with metadata
 │       └── images.json          # Debloated images catalog (external asset)
@@ -211,7 +211,7 @@ In compliance with the [Dataset Debloating Guide](../../common-issues-and-fixes/
 The plugin uses `esbuild` to compile ESM modules into a single self-contained Immediately Invoked Function Expression (IIFE) ready for pasting into an Amplenote note:
 - **Command**: `node esbuild.js 29`
 - **Output Target**: `build/cat-facts.compiled.js`
-- **Optimizations**: Target `es2020`, minified whitespace and bundle size ~48.8 KB.
+- **Optimizations**: Target `es2020`, minified whitespace; current bundle size ~64.5 KB (includes the runtime hydration loaders, dual-CDN logic, and embed dashboard).
 
 ---
 

@@ -62,7 +62,7 @@ An intelligent, delightful companion plugin for your notes:
 • Real-time semantic classifier matching facts to 70 audited feline photos
 • Interactive 3-card Peek Viewer sidebar dashboard
 • 5-tier failover with 100% offline resilience
-• 100% open-source under GPL v3 with 76 automated tests
+• 100% open-source under GPL v3 with 78 automated tests
 
 Explore the repository:
 https://github.com/krishnakanthb13/anp-29-cat-facts
@@ -82,20 +82,20 @@ Long note-taking and writing sessions can get intense, and sometimes a quick mom
 
 #### What it does:
 1. **Inline Text Insertions (`insertText`)**: Type `{` anywhere in your note to insert:
-   - `Random Cat Fact`: Clean one-liner prefixed with a live indicator dot (`🟢` for live API, `💾` for offline library) with zero markdown link clutter.
-   - `Cat Fact Quote Card`: Elegant markdown blockquote with category emoji badge.
-   - `Cat Fact with Photo`: Thematically matched photo paired with the quote card.
-2. **Interactive Peek Viewer Sidebar (`appOption`)**: Press `Ctrl+O` / `Cmd+O`, type `Open Cat Facts`, and a dedicated 3-card dashboard docks right in your sidebar.
+   - `Random`: Clean one-liner prefixed with a live indicator dot (`🟢` for live API, `💾` for offline library) with zero markdown link clutter.
+   - `Quote Card`: Elegant markdown blockquote with category emoji badge.
+   - `Photo Card`: Thematically matched photo paired with the quote card.
+2. **Interactive Peek Viewer Sidebar (`appOption`)**: Press `Ctrl+O` / `Cmd+O`, type `Open Peek Viewer`, and a dedicated 3-card dashboard docks right in your sidebar.
    - **Card 1 (Fact)**: Shows the topic badge, fact text, matched keywords, and live latency in milliseconds. Click anywhere on the card to copy to clipboard!
    - **Card 2 (Image)**: 70 hand-curated cat photos (100% verified cats—zero dogs or cars!) with skeleton loaders to prevent layout jank.
-   - **Card 3 (Options)**: Next fact, copy fact, direct note insertion, and keyboard navigation (<kbd>Space</kbd> for next, <kbd>C</kbd> to copy).
+   - **Card 3 (Options)**: Next fact, copy fact, and keyboard navigation (<kbd>Space</kbd> for next, <kbd>C</kbd> to copy).
 
 #### Interesting Technical Challenges Solved:
 - **Semantic Classification Without Heavy Models**: Running large ML models inside an Amplenote iframe wasn't practical. Instead, I built a lightweight keyword scoring engine with pre-compiled tuples. A fact about night vision automatically pulls a photo with luminous glowing eyes; a fact about ancient Egypt shows a statuesque, regal cat.
-- **Dataset Debloating (Bundle Size Optimization)**: Inlining 139 facts and 70 photos bloated the bundle to 82 KB. I externalized them to JSON assets loaded dynamically from CDN/localStorage while inlining a 10-fact/11-photo starter seed, slashing the bundle size down to 48.8 KB with zero first-paint delay.
+- **Dataset Debloating (Bundle Size Optimization)**: Inlining 137 facts and 70 photos bloated the bundle to 82 KB. I externalized them to JSON assets loaded dynamically from CDN/localStorage while inlining a 10-fact/11-photo starter seed for zero first-paint delay. The current bundle is ~64.5 KB with the runtime hydration loaders wired in.
 - **5-Tier API Resilience**: Primary fetch to `catfact.ninja` (6s timeout) ➔ Secondary fetch to `meowfacts` (4s timeout) ➔ Browser `localStorage` cache ➔ Inlined seed ➔ Safe default strings. It never throws unhandled errors or freezes the note editor.
 
-The project is fully open-source under GPL v3 with 76 automated Jest tests and a formal security audit.
+The project is fully open-source under GPL v3 with 78 automated Jest tests and a formal security audit.
 
 Check out the repository, setup guide, and compiled bundle here:
 https://github.com/krishnakanthb13/anp-29-cat-facts

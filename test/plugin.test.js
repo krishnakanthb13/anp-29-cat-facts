@@ -3,8 +3,13 @@ import plugin from "../cat-facts.js";
 
 describe("cat-facts.js Plugin Entry Point", () => {
   let mockApp;
+  const originalFetch = global.fetch;
 
   beforeEach(() => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ fact: "Cats purr at a healing frequency.", length: 34 })
+    });
     mockApp = {
       context: {
         noteUUID: "test-note-uuid",
@@ -16,6 +21,10 @@ describe("cat-facts.js Plugin Entry Point", () => {
       openEmbed: jest.fn().mockResolvedValue(true),
       alert: jest.fn().mockResolvedValue(true)
     };
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
   });
 
   describe("Plugin Exports Structure", () => {
@@ -63,6 +72,13 @@ describe("cat-facts.js Plugin Entry Point", () => {
       expect(inserted).toContain("![");
       expect(inserted.includes("https://images.unsplash.com/") || inserted.includes("https://cdn2.thecatapi.com/")).toBe(true);
       expect(inserted).toContain("> ");
+      expect(result).toBe("");
+    });
+
+    test("treats a non-throwing replaceSelection as success even when it resolves undefined", async () => {
+      mockApp.context.replaceSelection = jest.fn().mockResolvedValue(undefined);
+      const result = await plugin.insertText["Random"](mockApp);
+      expect(mockApp.context.replaceSelection).toHaveBeenCalled();
       expect(result).toBe("");
     });
 

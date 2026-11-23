@@ -10,7 +10,7 @@ A generic cat fact plugin might display an arbitrary cat photo alongside a fact.
 
 ### 1.3 Offline-First Reliability
 External APIs can experience latency, network interruptions, or rate limits. A high-quality Amplenote plugin must work anywhere: on an airplane, in a coffee shop with spotty Wi-Fi, or during offline note-taking. 
-- The plugin seeds an initial library of 139 rich, curated facts.
+- The plugin ships 10 inlined seed facts for instant first paint, then hydrates a 137-fact curated library in the background.
 - It attempts live retrieval from `catfact.ninja` whenever connectivity permits.
 - If any network failure occurs, the transition to local storage is 100% silent and instantaneous.
 
@@ -29,6 +29,7 @@ Amplenote's Peek Viewer is often kept as a compact sidebar (300px to 450px wide)
 ### 1.6 Performance-Safe & Defensive Engineering
 Amplenote plugins execute within a rich note-taking environment where keystrokes, note switches, and editing actions must never experience lag.
 - **Zero-Overhead Semantic Analysis**: Classification avoids runtime object allocations (`Object.entries()`) and scans against pre-compiled static keyword weights.
+- **Whole-Word Precision**: Keywords are matched on word boundaries (shared helper in Node and the embed), so `heart` never registers as `ear`, `earth`, `earliest`, or `year`, and overlap like `eye`/`eyes` cannot double-score a single occurrence.
 - **Single-Pass Sanitization**: String escaping utilizes single-pass regular expression lookups ($O(N)$) rather than chained multi-pass replacements.
 - **Defensive Host Boundaries**: Host RPC calls (`onEmbedCall`) and API handlers normalize incoming payloads defensively (`payload ?? {}`) and use optional chaining, ensuring that mobile environments or missing note context fail gracefully without unhandled exceptions.
 

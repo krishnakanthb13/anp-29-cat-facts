@@ -92,6 +92,26 @@ describe("classifier.js", () => {
       expect(res.badge).toBe("🐱 Feline Wisdom");
     });
 
+    test("matches keywords on whole words, not substrings (heart is not ear)", () => {
+      const fact = "A cat's heart beats nearly twice as fast as a human heart, at 110 to 140 beats a minute.";
+      const res = classifyFact(fact);
+      expect(res.category).not.toBe("whiskers_senses");
+      expect(res.matchedKeywords).not.toContain("ear");
+      expect(res.matchedKeywords).not.toContain("hear");
+      expect(res.matchedKeywords).toContain("heart");
+    });
+
+    test("does not treat 'earthquake' or 'earliest' as ear/whisker matches", () => {
+      expect(classifyFact("Cats can detect earthquake tremors minutes before humans.").category).not.toBe("whiskers_senses");
+      expect(classifyFact("The earliest ancestor of the modern cat lived 30 million years ago.").category).not.toBe("whiskers_senses");
+    });
+
+    test("does not double-count overlapping tokens like eye/eyes", () => {
+      const res = classifyFact("Cats have beautiful eyes.");
+      expect(res.matchedKeywords).toContain("eyes");
+      expect(res.matchedKeywords).not.toContain("eye");
+    });
+
     test("handles empty or nullish inputs safely", () => {
       expect(classifyFact("").category).toBe("general");
       expect(classifyFact(null).category).toBe("general");

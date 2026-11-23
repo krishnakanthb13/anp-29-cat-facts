@@ -46,6 +46,8 @@ describe("facts.js dataset & debloating loader", () => {
     expect(getFactByIndex(0)).toBe(rawFacts[0]);
     expect(getFactByIndex(1)).toBe(rawFacts[1]);
     expect(getFactByIndex(rawFacts.length)).toBe(rawFacts[0]);
+    expect(getFactByIndex(-1)).toBe(rawFacts[rawFacts.length - 1]);
+    expect(getFactByIndex(NaN)).toBe(rawFacts[0]);
   });
 
   test("getRandomFact returns a random fact from the database", () => {

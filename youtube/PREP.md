@@ -251,11 +251,11 @@ anp-29-cat-facts/
 │   ├── embed.js                 # Peek Viewer HTML/CSS/JS dashboard generator
 │   ├── utils.js                 # Single-pass HTML escaping, markdown formatting, array helpers
 │   └── data/
-│       ├── facts.js             # 139 verified curated cat facts & debloating loader
+│       ├── facts.js             # 137 verified curated cat facts & debloating loader
 │       ├── facts.json           # Debloated facts catalog (external asset)
 │       ├── images.js            # 70 verified authentic feline images with metadata
 │       └── images.json          # Debloated images catalog (external asset)
-├── test/                        # 7 Jest test suites (76 passing tests, 100% coverage)
+├── test/                        # 7 Jest test suites (78 passing tests, 100% coverage)
 └── build/
     └── cat-facts.compiled.js    # Production-ready IIFE bundle for Amplenote
 ```
@@ -264,18 +264,18 @@ anp-29-cat-facts/
 1. **5-Tier Failover Resilience (`lib/api.js`)**:
    - Primary: `catfact.ninja/fact` (6s timeout with `AbortController`).
    - Secondary: `meowfacts.herokuapp.com/` (4s timeout).
-   - Tertiary: Browser `localStorage` cache (139 facts).
+   - Tertiary: Browser `localStorage` cache (137 facts).
    - Quaternary: Inlined starter seed (`SEED_FACTS`, 10 facts) for zero-latency initial paint.
    - Quinary: Safe static string fallback ensuring catch blocks never throw uncaught exceptions.
 2. **Pre-Compiled Classification Weights (`lib/classifier.js`)**:
    - Keyword weights are pre-compiled at module initialization into static tuples (`weight = keyword.includes(" ") ? 4 : keyword.length > 5 ? 2 : 1`).
    - Eliminates `Object.entries()` allocations and string evaluations inside high-frequency classification loops.
 3. **Dataset Debloating (Appendix IV)**:
-   - Full catalogs (`facts.json` ~19.8 KB and `images.json` ~24.6 KB) are externalized during bundling via `esbuild.js` (`external: ["*.json"]`).
-   - Keeps compiled distribution bundle compact (~48.8 KB) while supporting multi-endpoint CDN hydration from GitHub Raw and jsDelivr with `localStorage` persistence.
+   - Full catalogs (`facts.json` ~19.2 KB and `images.json` ~24.0 KB) are externalized during bundling via `esbuild.js` (`external: ["*.json"]`).
+   - Current compiled bundle is ~64.5 KB (includes the runtime hydration loaders) while supporting multi-endpoint CDN hydration from GitHub Raw and jsDelivr with `localStorage` persistence.
 4. **Defensive Host Boundaries (`cat-facts.js`)**:
    - Host RPC bridge (`onEmbedCall`) defensively sanitizes incoming payloads (`payload ?? {}`).
    - Cascades note insertion gracefully: `context.replaceSelection` ➔ `app.insertContent` ➔ `app.insertNoteContent({ uuid })`.
 5. **Comprehensive Test Suite**:
-   - 7 test suites covering API resilience, classification accuracy, DOM embed generation, dataset integrity, markdown formatting, and host RPC handlers (76/76 passing tests).
+   - 7 test suites covering API resilience, classification accuracy (including whole-word boundary regressions), DOM embed generation, dataset integrity, markdown formatting, and host RPC handlers (78/78 passing tests).
 

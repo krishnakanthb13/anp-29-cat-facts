@@ -8,10 +8,33 @@ var HTML_ESCAPE_MAP = {
   "'": "&#039;"
 };
 function escapeHtml(str) {
-  if (typeof str !== "string") {
-    return str == null ? "" : String(str);
+  if (str == null) {
+    return "";
   }
-  return str.replace(/[&<>"']/g, (match) => HTML_ESCAPE_MAP[match]);
+  return String(str).replace(/[&<>"']/g, (match) => HTML_ESCAPE_MAP[match]);
+}
+async function fetchJsonWithTimeout(url, timeoutMs = 6e3) {
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const signal = controller ? controller.signal : void 0;
+  let timeoutId = null;
+  if (controller && timeoutMs > 0) {
+    timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  }
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      signal
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return await response.json();
+  } finally {
+    if (timeoutId != null) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 function attachDot(text, dot, dotPosition = "start") {
   if (!dot) return text;
@@ -81,10 +104,55 @@ var SEED_FACTS = [
   "A cat rubs against people not only to be affectionate but also to mark out its territory with facial scent glands.",
   "The domestic cat's purr vibrates at a frequency between 25 and 150 Hertz, which scientists believe stimulates bone density and tissue repair.",
   "The oldest known pet cat was found in a 9,500-year-old grave on the Mediterranean island of Cyprus, predating Egyptian art by millennia.",
-  "A cat's spine contains 53 flexible vertebrae, compared to just 33 in humans, giving them extraordinary elasticity.",
+  "A cat's spine contains 53 flexible vertebrae, compared to just 34 in humans, giving them extraordinary elasticity.",
   "All calico and tortoiseshell cats are almost exclusively female due to the orange and black coat gene being carried on the X chromosome."
 ];
+var FACTS_CACHE_KEY = "CatFacts_Facts_Cache";
+var FACTS_REMOTE_URLS = [
+  "https://raw.githubusercontent.com/krishnakanthb13/anp-29-cat-facts/main/lib/data/facts.json",
+  "https://cdn.jsdelivr.net/gh/krishnakanthb13/anp-29-cat-facts@main/lib/data/facts.json"
+];
+var DATASET_TIMEOUT_MS = 6e3;
 var inMemoryFacts = null;
+function isValidFactList(value) {
+  return Array.isArray(value) && value.length > 0 && value.every((fact) => typeof fact === "string" && fact.trim().length > 0);
+}
+async function loadFacts(app = null) {
+  if (inMemoryFacts && inMemoryFacts.length > SEED_FACTS.length) {
+    return inMemoryFacts;
+  }
+  try {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem(FACTS_CACHE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (isValidFactList(parsed) && parsed.length > SEED_FACTS.length) {
+          inMemoryFacts = parsed;
+          return inMemoryFacts;
+        }
+      }
+    }
+  } catch {
+  }
+  for (const url of FACTS_REMOTE_URLS) {
+    try {
+      const data = await fetchJsonWithTimeout(url, DATASET_TIMEOUT_MS);
+      if (isValidFactList(data) && data.length > SEED_FACTS.length) {
+        inMemoryFacts = data;
+        try {
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem(FACTS_CACHE_KEY, JSON.stringify(data));
+          }
+        } catch {
+        }
+        return inMemoryFacts;
+      }
+    } catch {
+    }
+  }
+  inMemoryFacts = inMemoryFacts || [...SEED_FACTS];
+  return inMemoryFacts;
+}
 function getAllFacts() {
   return inMemoryFacts || SEED_FACTS;
 }
@@ -96,31 +164,6 @@ function getRandomFact(excludeFact = null) {
 // anp-29-cat-facts/lib/api.js
 var CAT_FACT_API_URL = "https://catfact.ninja/fact";
 var MEOW_FACTS_API_URL = "https://meowfacts.herokuapp.com/";
-async function fetchJsonWithTimeout(url, timeoutMs) {
-  let timeoutId = null;
-  try {
-    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-    const signal = controller ? controller.signal : void 0;
-    if (controller && timeoutMs > 0) {
-      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    }
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "application/json"
-      },
-      signal
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    return await response.json();
-  } finally {
-    if (timeoutId != null) {
-      clearTimeout(timeoutId);
-    }
-  }
-}
 async function fetchOnlineFact(options = {}) {
   const { timeoutMs = 6e3 } = options;
   let primaryError = null;
@@ -139,7 +182,7 @@ async function fetchOnlineFact(options = {}) {
   }
   try {
     const data2 = await fetchJsonWithTimeout(MEOW_FACTS_API_URL, 4e3);
-    if (data2 && Array.isArray(data2.data) && data2.data[0]) {
+    if (data2 && Array.isArray(data2.data) && typeof data2.data[0] === "string" && data2.data[0].trim()) {
       const fact = data2.data[0].trim();
       return {
         fact,
@@ -148,7 +191,7 @@ async function fetchOnlineFact(options = {}) {
         isLive: true
       };
     }
-  } catch (err2) {
+  } catch {
   }
   throw primaryError || new Error("All live feline API endpoints failed");
 }
@@ -164,7 +207,7 @@ async function getCatFact(options = {}) {
           isLive: true
         };
       }
-    } catch (err) {
+    } catch {
     }
   }
   const fallback = getRandomFact(excludeFact);
@@ -256,7 +299,54 @@ var SEED_IMAGES = [
     tags: ["anatomy", "skeleton", "tail", "vertebrae", "bones", "flexible", "balance"]
   }
 ];
+var IMAGES_CACHE_KEY = "CatFacts_Images_Cache";
+var IMAGES_REMOTE_URLS = [
+  "https://raw.githubusercontent.com/krishnakanthb13/anp-29-cat-facts/main/lib/data/images.json",
+  "https://cdn.jsdelivr.net/gh/krishnakanthb13/anp-29-cat-facts@main/lib/data/images.json"
+];
+var DATASET_TIMEOUT_MS2 = 6e3;
 var inMemoryImages = null;
+function isValidImageList(value) {
+  return Array.isArray(value) && value.length > 0 && value.every(
+    (img) => img && typeof img.url === "string" && typeof img.alt === "string" && typeof img.category === "string"
+  );
+}
+async function loadImages(app = null) {
+  if (inMemoryImages && inMemoryImages.length > SEED_IMAGES.length) {
+    return inMemoryImages;
+  }
+  try {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem(IMAGES_CACHE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (isValidImageList(parsed) && parsed.length > SEED_IMAGES.length) {
+          inMemoryImages = parsed;
+          return inMemoryImages;
+        }
+      }
+    }
+  } catch {
+  }
+  for (const url of IMAGES_REMOTE_URLS) {
+    try {
+      const data = await fetchJsonWithTimeout(url, DATASET_TIMEOUT_MS2);
+      if (isValidImageList(data) && data.length > SEED_IMAGES.length) {
+        inMemoryImages = data;
+        try {
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem(IMAGES_CACHE_KEY, JSON.stringify(data));
+          }
+        } catch {
+        }
+        return inMemoryImages;
+      }
+    } catch {
+    }
+  }
+  inMemoryImages = inMemoryImages || [...SEED_IMAGES];
+  return inMemoryImages;
+}
 function getAllImages() {
   return inMemoryImages || SEED_IMAGES;
 }
@@ -592,6 +682,9 @@ var CATEGORY_DEFINITIONS = {
       "sweetness",
       "receptor",
       "heart",
+      "heart beats",
+      "heartbeat",
+      "beats",
       "heart rate",
       "pulse",
       "brain",
@@ -606,6 +699,20 @@ var CATEGORY_DEFINITIONS = {
     ]
   }
 };
+function hasWholeWordMatch(text, keyword) {
+  const wordChar = /[a-z0-9_]/;
+  let idx = text.indexOf(keyword);
+  while (idx !== -1) {
+    const before = idx === 0 ? "" : text[idx - 1];
+    const afterIndex = idx + keyword.length;
+    const after = afterIndex >= text.length ? "" : text[afterIndex];
+    if (!wordChar.test(before) && !wordChar.test(after)) {
+      return true;
+    }
+    idx = text.indexOf(keyword, idx + 1);
+  }
+  return false;
+}
 var COMPILED_CATEGORIES = Object.entries(CATEGORY_DEFINITIONS).map(([catKey, def]) => ({
   catKey,
   def,
@@ -635,7 +742,7 @@ function classifyFact(factText) {
     const matches = [];
     for (let k = 0; k < weightedKeywords.length; k++) {
       const { keyword, weight } = weightedKeywords[k];
-      if (normalized.includes(keyword)) {
+      if (hasWholeWordMatch(normalized, keyword)) {
         score += weight;
         matches.push(keyword);
       }
@@ -702,10 +809,13 @@ function selectImageForFact(factText, options = {}) {
 }
 
 // anp-29-cat-facts/lib/embed.js
+function serializeForScript(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+}
 function renderCatFactsEmbed(app, options = {}) {
-  const imagesJson = JSON.stringify(SEED_IMAGES);
-  const factsJson = JSON.stringify(SEED_FACTS);
-  const categoriesJson = JSON.stringify(CATEGORY_DEFINITIONS);
+  const imagesJson = serializeForScript(SEED_IMAGES);
+  const factsJson = serializeForScript(SEED_FACTS);
+  const categoriesJson = serializeForScript(CATEGORY_DEFINITIONS);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1412,20 +1522,59 @@ function renderCatFactsEmbed(app, options = {}) {
       // Dataset debloating: hydrate full catalogs from localStorage or remote GitHub Raw / jsDelivr
       const FACTS_CACHE_KEY = "CatFacts_Facts_Cache";
       const IMAGES_CACHE_KEY = "CatFacts_Images_Cache";
+      const FACTS_REMOTE_URLS = [
+        "https://raw.githubusercontent.com/krishnakanthb13/anp-29-cat-facts/main/lib/data/facts.json",
+        "https://cdn.jsdelivr.net/gh/krishnakanthb13/anp-29-cat-facts@main/lib/data/facts.json"
+      ];
+      const IMAGES_REMOTE_URLS = [
+        "https://raw.githubusercontent.com/krishnakanthb13/anp-29-cat-facts/main/lib/data/images.json",
+        "https://cdn.jsdelivr.net/gh/krishnakanthb13/anp-29-cat-facts@main/lib/data/images.json"
+      ];
+
+      function isValidFactList(list) {
+        return Array.isArray(list) && list.length > 0 &&
+          list.every(function(x) { return typeof x === "string" && x.trim().length > 0; });
+      }
+
+      function isValidImageList(list) {
+        return Array.isArray(list) && list.length > 0 &&
+          list.every(function(x) {
+            return x && typeof x.url === "string" && typeof x.alt === "string" && typeof x.category === "string";
+          });
+      }
+
+      function fetchJsonWithTimeout(url, timeoutMs) {
+        var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+        var tid = controller ? setTimeout(function() { controller.abort(); }, timeoutMs) : null;
+        return fetch(url, controller ? { signal: controller.signal } : undefined).then(function(res) {
+          if (!res || !res.ok) throw new Error("HTTP " + (res ? res.status : "error"));
+          return res.json();
+        }).finally(function() { if (tid != null) clearTimeout(tid); });
+      }
+
+      async function fetchFirstValid(urls, validate, timeoutMs) {
+        for (var i = 0; i < urls.length; i++) {
+          try {
+            var data = await fetchJsonWithTimeout(urls[i], timeoutMs);
+            if (validate(data)) return data;
+          } catch (e) {}
+        }
+        return null;
+      }
 
       try {
         if (typeof localStorage !== "undefined") {
-          const cachedF = localStorage.getItem(FACTS_CACHE_KEY);
+          var cachedF = localStorage.getItem(FACTS_CACHE_KEY);
           if (cachedF) {
-            const parsedF = JSON.parse(cachedF);
-            if (Array.isArray(parsedF) && parsedF.length > ALL_FACTS.length) {
+            var parsedF = JSON.parse(cachedF);
+            if (isValidFactList(parsedF) && parsedF.length > ALL_FACTS.length) {
               ALL_FACTS = parsedF;
             }
           }
-          const cachedI = localStorage.getItem(IMAGES_CACHE_KEY);
+          var cachedI = localStorage.getItem(IMAGES_CACHE_KEY);
           if (cachedI) {
-            const parsedI = JSON.parse(cachedI);
-            if (Array.isArray(parsedI) && parsedI.length > ALL_IMAGES.length) {
+            var parsedI = JSON.parse(cachedI);
+            if (isValidImageList(parsedI) && parsedI.length > ALL_IMAGES.length) {
               ALL_IMAGES = parsedI;
             }
           }
@@ -1435,28 +1584,18 @@ function renderCatFactsEmbed(app, options = {}) {
       // Background async fetch for initial download if not cached
       setTimeout(async function() {
         if (ALL_FACTS.length <= 10) {
-          try {
-            const resF = await fetch("https://raw.githubusercontent.com/krishnakanthb13/anp-29-cat-facts/main/lib/data/facts.json");
-            if (resF && resF.ok) {
-              const dataF = await resF.json();
-              if (Array.isArray(dataF) && dataF.length > 0) {
-                ALL_FACTS = dataF;
-                try { if (typeof localStorage !== "undefined") localStorage.setItem(FACTS_CACHE_KEY, JSON.stringify(dataF)); } catch (e) {}
-              }
-            }
-          } catch (e) {}
+          var dataF = await fetchFirstValid(FACTS_REMOTE_URLS, isValidFactList, 5000);
+          if (dataF) {
+            ALL_FACTS = dataF;
+            try { if (typeof localStorage !== "undefined") localStorage.setItem(FACTS_CACHE_KEY, JSON.stringify(dataF)); } catch (e) {}
+          }
         }
         if (ALL_IMAGES.length <= 11) {
-          try {
-            const resI = await fetch("https://raw.githubusercontent.com/krishnakanthb13/anp-29-cat-facts/main/lib/data/images.json");
-            if (resI && resI.ok) {
-              const dataI = await resI.json();
-              if (Array.isArray(dataI) && dataI.length > 0) {
-                ALL_IMAGES = dataI;
-                try { if (typeof localStorage !== "undefined") localStorage.setItem(IMAGES_CACHE_KEY, JSON.stringify(dataI)); } catch (e) {}
-              }
-            }
-          } catch (e) {}
+          var dataI = await fetchFirstValid(IMAGES_REMOTE_URLS, isValidImageList, 5000);
+          if (dataI) {
+            ALL_IMAGES = dataI;
+            try { if (typeof localStorage !== "undefined") localStorage.setItem(IMAGES_CACHE_KEY, JSON.stringify(dataI)); } catch (e) {}
+          }
         }
       }, 100);
 
@@ -1468,7 +1607,8 @@ function renderCatFactsEmbed(app, options = {}) {
       let isSmartMatch = true;
       let isLiveApi = true;
       let isLoading = false;
-      let factIndex = Math.floor(Math.random() * ALL_FACTS.length);
+      let pendingRefresh = false;
+      let factIndex = ALL_FACTS.length > 0 ? Math.floor(Math.random() * ALL_FACTS.length) : 0;
 
       // DOM Elements
       const catImg = document.getElementById("catImg");
@@ -1511,20 +1651,37 @@ function renderCatFactsEmbed(app, options = {}) {
         return badgeStr;
       }
 
+      // Whole-word matcher mirrored from lib/classifier.js (keeps Node and browser parity)
+      function hasWholeWordMatch(text, keyword) {
+        var wordChar = /[a-z0-9_]/;
+        var idx = text.indexOf(keyword);
+        while (idx !== -1) {
+          var before = idx === 0 ? "" : text.charAt(idx - 1);
+          var afterIndex = idx + keyword.length;
+          var after = afterIndex >= text.length ? "" : text.charAt(afterIndex);
+          if (!wordChar.test(before) && !wordChar.test(after)) return true;
+          idx = text.indexOf(keyword, idx + 1);
+        }
+        return false;
+      }
+
       // Classifier implementation in browser
       function classifyFactText(text) {
         if (!text) return { category: "general", label: "General Feline", badge: "\u{1F431} Feline Wisdom", matchedKeywords: [] };
-        const lower = text.toLowerCase();
-        let bestCategory = null;
-        let maxScore = 0;
-        let matched = [];
+        var lower = text.toLowerCase();
+        var bestCategory = null;
+        var maxScore = 0;
+        var matched = [];
 
-        for (const [key, def] of Object.entries(CATEGORY_DEFS)) {
-          let score = 0;
-          const currentMatches = [];
-          for (const word of def.keywords) {
-            if (lower.includes(word)) {
-              const weight = word.includes(" ") ? 4 : word.length > 5 ? 2 : 1;
+        for (var key in CATEGORY_DEFS) {
+          if (!Object.prototype.hasOwnProperty.call(CATEGORY_DEFS, key)) continue;
+          var def = CATEGORY_DEFS[key];
+          var score = 0;
+          var currentMatches = [];
+          for (var i = 0; i < def.keywords.length; i++) {
+            var word = def.keywords[i];
+            if (hasWholeWordMatch(lower, word)) {
+              var weight = word.indexOf(" ") >= 0 ? 4 : word.length > 5 ? 2 : 1;
               score += weight;
               currentMatches.push(word);
             }
@@ -1591,62 +1748,45 @@ function renderCatFactsEmbed(app, options = {}) {
       // Fetch fact (online API with secondary live fallback and local library fallback)
       async function fetchFact() {
         if (isLiveApi) {
-          const startTime = Date.now();
+          var startTime = Date.now();
           // 1. Primary endpoint: catfact.ninja
           try {
-            const controller = new AbortController();
-            const tid = setTimeout(() => controller.abort(), 6000);
-            const res = await fetch("https://catfact.ninja/fact", {
-              headers: { "Accept": "application/json" },
-              signal: controller.signal
-            });
-            clearTimeout(tid);
-            if (res.ok) {
-              const data = await res.json();
-              if (data && data.fact) {
-                const latency = Date.now() - startTime;
-                // console.log("[CatFacts] \u{1F7E2} Live API Success (catfact.ninja):", data.fact, "(" + latency + "ms)");
-                return {
-                  fact: data.fact.trim(),
-                  source: "catfact.ninja",
-                  isLive: true,
-                  latency: latency
-                };
-              }
+            var data = await fetchJsonWithTimeout("https://catfact.ninja/fact", 6000);
+            if (data && typeof data.fact === "string" && data.fact.trim()) {
+              return {
+                fact: data.fact.trim(),
+                source: "catfact.ninja",
+                isLive: true,
+                latency: Date.now() - startTime
+              };
             }
-          } catch (e) {
-            // console.warn("[CatFacts] Primary catfact.ninja API failed:", e.message);
-          }
+          } catch (e) {}
 
           // 2. Secondary endpoint: meowfacts.herokuapp.com
           try {
-            const controller2 = new AbortController();
-            const tid2 = setTimeout(() => controller2.abort(), 4000);
-            const res2 = await fetch("https://meowfacts.herokuapp.com/", {
-              signal: controller2.signal
-            });
-            clearTimeout(tid2);
-            if (res2.ok) {
-              const data2 = await res2.json();
-              if (data2 && Array.isArray(data2.data) && data2.data[0]) {
-                const latency2 = Date.now() - startTime;
-                // console.log("[CatFacts] \u{1F7E2} Secondary Live API Success (meowfacts):", data2.data[0], "(" + latency2 + "ms)");
-                return {
-                  fact: data2.data[0].trim(),
-                  source: "meowfacts",
-                  isLive: true,
-                  latency: latency2
-                };
-              }
+            var data2 = await fetchJsonWithTimeout("https://meowfacts.herokuapp.com/", 4000);
+            if (data2 && Array.isArray(data2.data) && typeof data2.data[0] === "string" && data2.data[0].trim()) {
+              return {
+                fact: data2.data[0].trim(),
+                source: "meowfacts",
+                isLive: true,
+                latency: Date.now() - startTime
+              };
             }
-          } catch (e2) {
-            // console.warn("[CatFacts] Secondary meowfacts API failed:", e2.message);
-          }
+          } catch (e2) {}
         }
 
         // Offline curated library fallback
+        if (ALL_FACTS.length === 0) {
+          return {
+            fact: "Cats are wonderful companions.",
+            source: "Curated Library",
+            isLive: false,
+            latency: 0
+          };
+        }
+
         factIndex = (factIndex + 1) % ALL_FACTS.length;
-        // console.log("[CatFacts] \u{1F4BE} Serving from local curated collection:", ALL_FACTS[factIndex]);
         return {
           fact: ALL_FACTS[factIndex],
           source: "Curated Library",
@@ -1657,7 +1797,7 @@ function renderCatFactsEmbed(app, options = {}) {
 
       // Display updated fact & image
       async function updateDisplay() {
-        if (isLoading) return;
+        if (isLoading) { pendingRefresh = true; return; }
         isLoading = true;
         btnNext.disabled = true;
         factText.classList.add("fade");
@@ -1675,20 +1815,23 @@ function renderCatFactsEmbed(app, options = {}) {
           imgSkeleton.classList.remove("hidden");
           catImg.style.display = "none";
           catImg.classList.remove("loaded");
-          imageCaption.textContent = currentImage.alt;
+          imageCaption.textContent = currentImage.alt || "Cat companion";
 
           const tempImg = new Image();
           tempImg.referrerPolicy = "no-referrer";
           tempImg.onload = function() {
             catImg.src = currentImage.url;
-            catImg.alt = currentImage.alt;
+            catImg.alt = currentImage.alt || "Cat";
             catImg.style.display = "block";
             catImg.classList.add("loaded");
             imgSkeleton.classList.add("hidden");
           };
           tempImg.onerror = function() {
-            catImg.src = ALL_IMAGES[0].url;
-            catImg.alt = ALL_IMAGES[0].alt;
+            const fallbackImg = ALL_IMAGES[0];
+            if (fallbackImg && fallbackImg.url) {
+              catImg.src = fallbackImg.url;
+              catImg.alt = fallbackImg.alt || "Cat";
+            }
             catImg.style.display = "block";
             catImg.classList.add("loaded");
             imgSkeleton.classList.add("hidden");
@@ -1735,13 +1878,18 @@ function renderCatFactsEmbed(app, options = {}) {
         } finally {
           isLoading = false;
           btnNext.disabled = false;
+          if (pendingRefresh) {
+            pendingRefresh = false;
+            updateDisplay();
+          }
         }
       }
 
       // Safe image fallback on element directly
       catImg.onerror = function() {
-        if (catImg.src !== ALL_IMAGES[0].url) {
-          catImg.src = ALL_IMAGES[0].url;
+        const fallbackImg = ALL_IMAGES[0];
+        if (fallbackImg && fallbackImg.url && catImg.src !== fallbackImg.url) {
+          catImg.src = fallbackImg.url;
         }
       };
 
@@ -1790,7 +1938,7 @@ function renderCatFactsEmbed(app, options = {}) {
         isSmartMatch = e.target.checked;
         showToast(isSmartMatch ? "Smart Contextual Match ON" : "Pure Random Image Mode", isSmartMatch ? "\u2728" : "\u{1F3B2}");
         if (currentFact) {
-          const selection = pickImage(currentFact, isSmartMatch, null);
+          const selection = pickImage(currentFact, isSmartMatch, currentImage ? currentImage.url : null);
           currentImage = selection.image;
           currentClassification = selection.classification;
           catImg.src = currentImage.url;
@@ -1817,14 +1965,16 @@ function renderCatFactsEmbed(app, options = {}) {
         updateDisplay();
       });
 
-      // Keyboard navigation
+      // Keyboard navigation (ignore when a form control has focus so we don't double-fire)
       window.addEventListener("keydown", function(e) {
+        const targetTag = (e.target && e.target.tagName) || "";
+        if (targetTag === "INPUT" || targetTag === "BUTTON" || targetTag === "TEXTAREA" || targetTag === "LABEL") {
+          return;
+        }
         if (e.code === "Space" || e.code === "ArrowRight") {
           e.preventDefault();
           updateDisplay();
-        } else if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
-          // Allow normal copy
-        } else if (e.code === "KeyC") {
+        } else if (e.code === "KeyC" && !(e.ctrlKey || e.metaKey)) {
           copyFact();
         }
       });
@@ -1838,8 +1988,16 @@ function renderCatFactsEmbed(app, options = {}) {
 }
 
 // anp-29-cat-facts/cat-facts.js
+var hydrationPromise = null;
+function hydrateDatasets() {
+  if (!hydrationPromise) {
+    hydrationPromise = Promise.allSettled([loadFacts(), loadImages()]);
+  }
+  return hydrationPromise;
+}
 async function launchCatFactsPeek(app) {
   if (!app) return;
+  void hydrateDatasets();
   try {
     if (typeof app.openSidebarEmbed === "function") {
       let opened;
@@ -1848,7 +2006,7 @@ async function launchCatFactsPeek(app) {
           { id: "cat-facts-peek", aspectRatio: 1.1 },
           {}
         );
-      } catch (sidebarErr) {
+      } catch {
         opened = await app.openSidebarEmbed(1.1, {});
       }
       if (opened === false && typeof app.openEmbed === "function") {
@@ -1869,58 +2027,56 @@ async function launchCatFactsPeek(app) {
 async function insertMarkdownOrFallback(app, markdown) {
   if (app?.context && typeof app.context.replaceSelection === "function") {
     try {
-      const replaced = await app.context.replaceSelection(markdown);
-      if (replaced) {
-        return "";
-      }
-    } catch (err) {
+      await app.context.replaceSelection(markdown);
+      return "";
+    } catch {
     }
   }
   return markdown;
 }
 async function insertPlainFact(app) {
+  void hydrateDatasets();
   try {
-    const { fact, source, isLive } = await getCatFact({ preferOnline: true });
+    const { fact, isLive } = await getCatFact({ preferOnline: true });
     const markdown = formatFactMarkdown(fact, {
       style: "plain",
-      isLive,
-      source
+      isLive
     });
     return await insertMarkdownOrFallback(app, markdown);
-  } catch (err) {
+  } catch {
     return "\u{1F7E2} Cats sleep for roughly 70% of their lives.";
   }
 }
 async function insertQuoteFact(app) {
+  void hydrateDatasets();
   try {
-    const { fact, source, isLive } = await getCatFact({ preferOnline: true });
+    const { fact, isLive } = await getCatFact({ preferOnline: true });
     const { classification } = selectImageForFact(fact);
     const markdown = formatFactMarkdown(fact, {
       style: "quote",
       category: classification.label,
       badge: classification.badge,
-      isLive,
-      source
+      isLive
     });
     return await insertMarkdownOrFallback(app, markdown);
-  } catch (err) {
+  } catch {
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> Cats make over 100 different vocal sounds.\n";
   }
 }
 async function insertPhotoFact(app) {
+  void hydrateDatasets();
   try {
-    const { fact, source, isLive } = await getCatFact({ preferOnline: true });
+    const { fact, isLive } = await getCatFact({ preferOnline: true });
     const { image, classification } = selectImageForFact(fact);
     const markdown = formatFactMarkdown(fact, {
       style: "card_with_image",
       imageUrl: image.url,
       category: classification.label,
       badge: classification.badge,
-      isLive,
-      source
+      isLive
     });
     return await insertMarkdownOrFallback(app, markdown);
-  } catch (err) {
+  } catch {
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }

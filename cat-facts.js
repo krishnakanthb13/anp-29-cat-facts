@@ -12,6 +12,24 @@ import { getCatFact } from "./lib/api.js";
 import { selectImageForFact } from "./lib/classifier.js";
 import { renderCatFactsEmbed } from "./lib/embed.js";
 import { formatFactMarkdown, escapeHtml } from "./lib/utils.js";
+import { loadFacts } from "./lib/data/facts.js";
+import { loadImages } from "./lib/data/images.js";
+
+let hydrationPromise = null;
+
+/**
+ * Warms the curated datasets in the background so the full fact/image catalog is available
+ * to subsequent insertions. Uses the inlined seeds until hydration completes (or if it fails).
+ * The promise is memoized so repeated actions never trigger duplicate downloads.
+ *
+ * @returns {Promise<unknown>} - Settles once both datasets finish loading or fail.
+ */
+function hydrateDatasets() {
+  if (!hydrationPromise) {
+    hydrationPromise = Promise.allSettled([loadFacts(), loadImages()]);
+  }
+  return hydrationPromise;
+}
 
 /**
  * Core handler to launch the Peek Viewer sidebar embed.
@@ -20,6 +38,7 @@ import { formatFactMarkdown, escapeHtml } from "./lib/utils.js";
  */
 async function launchCatFactsPeek(app) {
   if (!app) return;
+  void hydrateDatasets();
   try {
     if (typeof app.openSidebarEmbed === "function") {
       let opened;
@@ -28,8 +47,8 @@ async function launchCatFactsPeek(app) {
           { id: "cat-facts-peek", aspectRatio: 1.1 },
           {}
         );
-      } catch (sidebarErr) {
-        // console.warn("[CatFacts] openSidebarEmbed with options failed, attempting numeric fallback:", sidebarErr);
+      } catch {
+        // console.warn("[CatFacts] openSidebarEmbed with options failed, attempting numeric fallback");
         opened = await app.openSidebarEmbed(1.1, {});
       }
 
@@ -64,12 +83,10 @@ async function launchCatFactsPeek(app) {
 async function insertMarkdownOrFallback(app, markdown) {
   if (app?.context && typeof app.context.replaceSelection === "function") {
     try {
-      const replaced = await app.context.replaceSelection(markdown);
-      if (replaced) {
-        return "";
-      }
-    } catch (err) {
-      // console.warn("[CatFacts] replaceSelection failed, falling back to direct return:", err);
+      await app.context.replaceSelection(markdown);
+      return "";
+    } catch {
+      // console.warn("[CatFacts] replaceSelection failed, falling back to direct return");
     }
   }
   return markdown;
@@ -81,16 +98,16 @@ async function insertMarkdownOrFallback(app, markdown) {
  * @returns {Promise<string>} Formatted markdown fact or empty string if replaced.
  */
 async function insertPlainFact(app) {
+  void hydrateDatasets();
   try {
-    const { fact, source, isLive } = await getCatFact({ preferOnline: true });
+    const { fact, isLive } = await getCatFact({ preferOnline: true });
     const markdown = formatFactMarkdown(fact, {
       style: "plain",
-      isLive,
-      source
+      isLive
     });
     return await insertMarkdownOrFallback(app, markdown);
-  } catch (err) {
-    // console.error("[CatFacts] insertPlainFact error:", err);
+  } catch {
+    // console.error("[CatFacts] insertPlainFact error");
     return "🟢 Cats sleep for roughly 70% of their lives.";
   }
 }
@@ -101,19 +118,19 @@ async function insertPlainFact(app) {
  * @returns {Promise<string>} Formatted markdown quote card or empty string if replaced.
  */
 async function insertQuoteFact(app) {
+  void hydrateDatasets();
   try {
-    const { fact, source, isLive } = await getCatFact({ preferOnline: true });
+    const { fact, isLive } = await getCatFact({ preferOnline: true });
     const { classification } = selectImageForFact(fact);
     const markdown = formatFactMarkdown(fact, {
       style: "quote",
       category: classification.label,
       badge: classification.badge,
-      isLive,
-      source
+      isLive
     });
     return await insertMarkdownOrFallback(app, markdown);
-  } catch (err) {
-    // console.error("[CatFacts] insertQuoteFact error:", err);
+  } catch {
+    // console.error("[CatFacts] insertQuoteFact error");
     return "> 🟢 **🐾 Cat Fact**\n> Cats make over 100 different vocal sounds.\n";
   }
 }
@@ -124,20 +141,20 @@ async function insertQuoteFact(app) {
  * @returns {Promise<string>} Formatted markdown photo card or empty string if replaced.
  */
 async function insertPhotoFact(app) {
+  void hydrateDatasets();
   try {
-    const { fact, source, isLive } = await getCatFact({ preferOnline: true });
+    const { fact, isLive } = await getCatFact({ preferOnline: true });
     const { image, classification } = selectImageForFact(fact);
     const markdown = formatFactMarkdown(fact, {
       style: "card_with_image",
       imageUrl: image.url,
       category: classification.label,
       badge: classification.badge,
-      isLive,
-      source
+      isLive
     });
     return await insertMarkdownOrFallback(app, markdown);
-  } catch (err) {
-    // console.error("[CatFacts] insertPhotoFact error:", err);
+  } catch {
+    // console.error("[CatFacts] insertPhotoFact error");
     return "> 🟢 **🐾 Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }

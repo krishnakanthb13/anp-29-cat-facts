@@ -9,9 +9,9 @@
 ## 1. System Overview
 
 Purrfect Cat Facts integrates three core subsystems:
-1. **Fact Retrieval Pipeline (`lib/api.js` & `lib/data/facts.js`)**: Real-time queries to `https://catfact.ninja/fact` coupled with an offline curated repository of 139 feline facts.
+1. **Fact Retrieval Pipeline (`lib/api.js` & `lib/data/facts.js`)**: Real-time queries to `https://catfact.ninja/fact` coupled with an offline curated repository of 137 feline facts.
 2. **Contextual Classification Engine (`lib/classifier.js` & `lib/data/images.js`)**: An NLP keyword-weighting model that categorizes facts into 11 distinct thematic domains and pairs them with 70 visually audited, 100% feline photos (curated from Unsplash and TheCatAPI).
-3. **Interactive Embed Dashboard (`lib/embed.js`)**: An iframe-isolated web application designed for Amplenote's Peek Viewer sidebar organized into 3 distinct cards (Fact Card FIRST, Image Card SECOND, Options Card THIRD) with an ultra-minimal header, supporting client-side theme detection, live fetching, keyboard shortcuts, and bi-directional RPC communication via `window.callAmplenotePlugin`.
+3. **Interactive Embed Dashboard (`lib/embed.js`)**: An iframe-isolated web application designed for Amplenote's Peek Viewer sidebar organized into 3 distinct cards (Fact Card FIRST, Image Card SECOND, Options Card THIRD) with an ultra-minimal header, supporting client-side theme detection, live fetching, keyboard shortcuts, and a defensive host action bridge (`onEmbedCall`).
 
 ```
                ┌────────────────────────┐
@@ -54,14 +54,16 @@ Purrfect Cat Facts integrates three core subsystems:
 ### 2.1 Dataset Debloating & Data Assets (`lib/data/`)
 Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/dataset-debloating.md):
 - **Extracted JSON Assets**:
-  - `lib/data/facts.json`: Complete repository of 139 verified feline facts (~19.8 KB).
+  - `lib/data/facts.json`: Complete repository of 137 verified feline facts (~19.2 KB).
   - `lib/data/images.json`: Complete catalog of 70 visually audited authentic cat images (~24.6 KB).
 - **ESBuild Exclusion**: Both datasets are marked `external: ["*.json"]` in `esbuild.js` to avoid static inlining.
 - **Instant Offline Starter Seed**:
   - `SEED_FACTS` (10 core facts) and `SEED_IMAGES` (11 category-representative photos) are kept in memory for instant, zero-latency first paint with 0 initial network requests.
 - **Dynamic Hydration Pattern**:
   - `loadFacts()` & `loadImages()` check: (1) In-memory cache -> (2) Persistent browser `localStorage` (`CatFacts_Facts_Cache`, `CatFacts_Images_Cache`) -> (3) Multi-endpoint remote fetch from GitHub Raw (`krishnakanthb13/anp-29-cat-facts`) and jsDelivr CDN.
-- **Bundle Optimization**: Reduced compiled IIFE bundle from **82.5 KB to 48.8 KB** (41% reduction).
+  - Both loaders use `fetchJsonWithTimeout` (6s abort timeout), validate the payload shape, and only accept caches larger than the inlined seed (so a tiny/stale cache can never degrade the catalog).
+  - `cat-facts.js` wires the loaders into the runtime through a memoized `hydrateDatasets()` warm-up triggered by insert actions and the Peek Viewer launch, so the full 137/70 catalog becomes available without blocking the first action.
+- **Bundle Size**: Current compiled IIFE bundle is **~64.5 KB (66,005 bytes)**. It now includes the runtime hydration loaders, dual-CDN + validation logic, the whole-word classifier, and the full embed dashboard.
 
 ### 2.2 `lib/data/images.js`
 - **Data Model**: `Array<CatImage>` where each entry contains:
@@ -75,26 +77,28 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
   - `getImagesByCategory(category)`: Filters catalog by category.
   - `getRandomCatImage(excludeUrl)`: Uniform random selection avoiding consecutive repetitions.
   - `getRandomImageForCategory(category, excludeUrl)`: Scoped thematic selection.
-  - `loadImages(app)`: Async hydration engine.
+  - `loadImages(app)`: Async hydration engine (6s timeout, payload validation, seed-size cache floor).
+- **Category Integrity**: `black_cat` now contains only genuine black/tuxedo photos; coat-genetics and calico/tortoiseshell images were moved to `anatomy` so the badge matches the pictures.
 
 ### 2.3 `lib/classifier.js`
 - **Algorithm & Optimization**:
   1. **Pre-Compiled Weight Cache**: During module initialization, `COMPILED_CATEGORIES` pre-computes keyword weights into static tuples (`weight = keyword.includes(" ") ? 4 : keyword.length > 5 ? 2 : 1`), eliminating `Object.entries()` allocations and dynamic string evaluations inside classification loops.
-  2. Input `factText` is normalized to lowercase.
-  3. The text is scanned against the pre-compiled categories:
+  2. **Whole-Word Matching**: Every keyword is matched via `hasWholeWordMatch()` (indexOf + boundary inspection, no regex), so `ear` will not match `heart`, `earth`, `earliest`, or `year`, and `eye`/`eyes` cannot double-count one occurrence. The browser embed mirrors this exact helper for byte-for-byte parity.
+  3. Input `factText` is normalized to lowercase.
+  4. The text is scanned against the pre-compiled categories:
      - Exact multi-word phrases (e.g. `"tapetum lucidum"`, `"hours a day"`, `"righting reflex"`, `"jacobson's organ"`): **4 points**.
      - Specific domain words (length > 5, e.g. `"papillae"`, `"vibrissae"`, `"whiskers"`, `"collarbone"`): **2 points**.
      - General domain tokens: **1 point**.
-  4. The category with the highest aggregate score is chosen.
-  5. If max score > 0, returns category metadata, badge, confidence level, and matched keywords.
-  6. If no matches occur or text is invalid, falls back gracefully to `"general"` category (`"🐱 Feline Wisdom"`).
+  5. The category with the highest aggregate score is chosen.
+  6. If max score > 0, returns category metadata, badge, confidence level, and matched keywords.
+  7. If no matches occur or text is invalid, falls back gracefully to `"general"` category (`"🐱 Feline Wisdom"`).
 
 ### 2.4 `lib/api.js` & Failover Architecture
-- **Unified Fetch Helper**: `fetchJsonWithTimeout(url, timeoutMs)` encapsulates `AbortController` signal handling, request timeout clearing, and response validation into a single DRY helper.
+- **Unified Fetch Helper**: `fetchJsonWithTimeout(url, timeoutMs)` lives in `lib/utils.js` and is shared by the live API client and both dataset loaders. It encapsulates `AbortController` signal handling, timeout clearing in a `finally` block, and HTTP response validation into one DRY helper.
 - **5-Tier Resilience Architecture**:
   1. **Tier 1 (Primary Live API)**: `catfact.ninja/fact` with a 6-second timeout.
   2. **Tier 2 (Secondary Live API)**: `meowfacts.herokuapp.com/` fallback with a 4-second timeout if primary fails or times out.
-  3. **Tier 3 (Persistent Browser Cache)**: Asynchronous hydration from `localStorage` (`139` facts).
+  3. **Tier 3 (Persistent Browser Cache)**: Asynchronous hydration from `localStorage` (`137` facts).
   4. **Tier 4 (Inlined Starter Seed)**: `SEED_FACTS` (10 facts) inlined in the bundle guarantees immediate paint on zero-network first launch.
   5. **Tier 5 (Hard Fallback String)**: Catch blocks return a safe default string so execution never crashes.
 - Automatically handles network drops, CORS restrictions, rate limits (HTTP 429), or server errors (HTTP 500).
@@ -103,8 +107,12 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
 - **Peek Viewer Web App**:
   - Rendered inside an isolated `<iframe>` by Amplenote.
   - Client-side DOM with zero external CSS/JS dependencies.
-  - Image skeleton shimmer with graceful `onerror` and `onload` handlers.
+  - Image skeleton shimmer with graceful `onerror` and `onload` handlers (guarded against an empty catalog).
   - Cached DOM references (`btnNext`, `btnCopy`, `toastIcon`) for minimal DOM querying overhead.
+  - **Script-Safe Data Injection**: `serializeForScript()` escapes `<`, `>`, and `&` in the serialized seed/fact/image/category JSON so no value can prematurely close the inline `<script>`.
+  - **Validated Hydration**: Remote datasets are fetched via a timed helper from GitHub Raw and jsDelivr, shape-validated (`isValidFactList` / `isValidImageList`), and only replace the seeds when larger.
+  - **Refresh Queue**: Requests made while a fetch is in flight (e.g. toggling Live API) set `pendingRefresh` and re-run once the current load finishes instead of being silently dropped.
+  - **Keyboard Guard**: Space/Arrow/C shortcuts are ignored while a button, input, textarea, or label has focus, preventing double-fire when `btnNext` is activated by keyboard.
   - **Card 3 Actions**:
     - `btnNext` (🐾 Next Fact): Fetches next fact & image.
     - `btnCopy` (📋 Copy Fact): Copies fact to clipboard with visual toast feedback.
@@ -113,7 +121,9 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
 
 ### 2.6 `lib/utils.js`
 - **Single-Pass HTML Sanitization**:
-  - `escapeHtml(str)`: Employs a single-pass regex replacement using a static `HTML_ESCAPE_MAP` lookup table ($O(N)$ traversal) to prevent XSS without chaining multiple string replacements.
+  - `escapeHtml(str)`: Employs a single-pass regex replacement using a static `HTML_ESCAPE_MAP` lookup table ($O(N)$ traversal) to prevent XSS without chaining multiple string replacements. Non-string values are coerced to strings before escaping.
+- **Network Helper**:
+  - `fetchJsonWithTimeout(url, timeoutMs)`: Abort-with-timeout JSON GET shared by `api.js` and the dataset loaders.
 - **Markdown & Indicator Formatting**:
   - `formatFactMarkdown(fact, options)`: Formats facts into plain, quote, or photo card styles.
   - `attachDot(text, dot, dotPosition)`: Composes indicator emojis without duplicating formatting logic.
@@ -123,10 +133,11 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
 ### 2.7 `cat-facts.js`
 - **Amplenote Plugin Protocol**:
   - `insertText`: Named option dictionary (`"Random"`, `"Quote Card"`, `"Photo Card"`).
-  - `insertMarkdownOrFallback`: Calls `await app.context.replaceSelection(markdown)` and returns `""` (empty string) so Amplenote parses the string natively as rich GFM without escaping syntax characters with backslashes (`\>`, `\*\*`, `!\[\]\(\)`), while satisfying the `String` return type contract to prevent null reference errors. Falls back to returning the raw markdown string if `replaceSelection` is unavailable.
+  - `insertMarkdownOrFallback`: Calls `await app.context.replaceSelection(markdown)` and returns `""` (empty string) so Amplenote parses the string natively as rich GFM without escaping syntax characters with backslashes (`\>`, `\*\*`, `!\[\]\(\)`), while satisfying the `String` return type contract to prevent null reference errors. **Success is defined as "did not throw"**, so a host that resolves `undefined` after replacing the selection no longer triggers a duplicate insertion. Falls back to returning the raw markdown string only when `replaceSelection` is unavailable or rejects.
+  - `hydrateDatasets`: Memoized background warm-up that calls `loadFacts()` and `loadImages()` from insert actions and the Peek Viewer launch, making the full curated catalog available without blocking.
   - `appOption`: Named option dictionary (`"Open Peek Viewer"`) launching the Peek Viewer embed (`openSidebarEmbed` with numeric fallback to `openEmbed`).
   - `renderEmbed`: Generates HTML string.
-  - `onEmbedCall`: Dispatches incoming actions (`notify`) with defensive `payload ?? {}` normalization and optional chaining on `app?.context` to safeguard against null or malformed RPC invocations.
+  - `onEmbedCall`: A defensive host action bridge. It handles a `notify` action (alert with preface) with `payload ?? {}` normalization and optional chaining; the embed itself does not currently invoke `window.callAmplenotePlugin`, so this path is host-driven only.
 
 ---
 
@@ -134,7 +145,7 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
 
 The plugin includes automated unit and integration tests covering all modules:
 - `test/api.test.js`: Mocked live endpoints, abort timeouts, and offline fallback.
-- `test/classifier.test.js`: Keyword matching, scoring tiers, and fallback behavior across 11 categories.
+- `test/classifier.test.js`: Keyword matching (including whole-word boundary regressions such as heart≠ear), scoring tiers, and fallback behavior across 11 categories.
 - `test/embed.test.js`: Peek Viewer DOM structure, required controls (`btnNext`, `btnCopy`), and layout integration.
 - `test/facts.test.js`: Seed integrity, dataset bounds, and `getFactByIndex` normalization.
 - `test/images.test.js`: CDN URL format, category distribution, and random selection.
@@ -145,5 +156,5 @@ The plugin includes automated unit and integration tests covering all modules:
 ```bash
 node --experimental-vm-modules node_modules/jest/bin/jest.js anp-29-cat-facts/test
 ```
-*Current Status: 7 suites, 77 passing tests (100% pass rate).*
+*Current Status: 7 suites, 78 passing tests (100% pass rate).*
 
