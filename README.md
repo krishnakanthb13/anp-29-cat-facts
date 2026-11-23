@@ -19,17 +19,17 @@ Every single image in the collection has been **100% visually audited and confir
 ## 🚀 Key Features
 
 ### 1. ✍️ Text Insertion (`insertText`)
-Invoke via the `{` menu or quick command bar anywhere inside your notes:
-- **`Random Cat Fact`**: Inserts a clean fact prefixed with a live indicator dot (`🟢` for live API, `💾` for offline curated storage) without markdown URL clutter:
+Invoke via the `{` menu or quick command bar anywhere inside your notes (rendered cleanly via `app.context.replaceSelection` with zero markdown backslash escaping):
+- **`Random`**: Inserts a clean fact prefixed with a live indicator dot (`🟢` for live API, `💾` for offline curated storage) without markdown URL clutter:
   ```markdown
   🟢 Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.
   ```
-- **`Cat Fact Quote Card`**: Inserts an elegant markdown quote block with the category badge and status indicator:
+- **`Quote Card`**: Inserts an elegant, native markdown quote block with category badge and status indicator:
   ```markdown
   > 🟢 **💤 Sleep & Rest**
   > Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.
   ```
-- **`Cat Fact with Photo`**: Inserts the fact together with a thematically matched cat photo in markdown:
+- **`Photo Card`**: Inserts the fact together with a thematically matched cat photo in markdown followed directly by the quote card:
   ```markdown
   ![💤 Sleep & Rest](https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=700&auto=format&fit=crop&q=80)
 
@@ -136,13 +136,13 @@ Type `{` inside any Amplenote note, jot, or task to open the plugin insert menu:
 
 | Command | Output Description | Example Format |
 | :--- | :--- | :--- |
-| **`Random Cat Fact`** | Inserts a clean, single-line fact prefixed with an unobtrusive status dot (`🟢` for Live API, `💾` for Curated Library). | `🟢 Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.` |
-| **`Cat Fact Quote Card`** | Inserts a styled blockquote card displaying the semantic topic badge, status indicator, and fact body. | `> 🟢 **💤 Sleep & Rest**`<br>`> Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.` |
-| **`Cat Fact with Photo`** | Pairs the fact with a thematically matched cat photo in responsive markdown followed by the quote card. | `![💤 Sleep & Rest](https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=700&auto=format&fit=crop&q=80)`<br><br>`> 🟢 **💤 Sleep & Rest**`<br>`> Cats spend approximately 70% of their lives sleeping...` |
+| **`Random`** | Inserts a clean, single-line fact prefixed with an unobtrusive status dot (`🟢` for Live API, `💾` for Curated Library). | `🟢 Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.` |
+| **`Quote Card`** | Inserts a styled blockquote card displaying the semantic topic badge, status indicator, and fact body. | `> 🟢 **💤 Sleep & Rest**`<br>`> Cats spend approximately 70% of their lives sleeping, which equates to around 13 to 16 hours every day.` |
+| **`Photo Card`** | Pairs the fact with a thematically matched cat photo in responsive markdown followed by the quote card. | `![💤 Sleep & Rest](https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=700&auto=format&fit=crop&q=80)`<br><br>`> 🟢 **💤 Sleep & Rest**`<br>`> Cats spend approximately 70% of their lives sleeping...` |
 
 ### 2. Global Search Command (`appOption`)
 - Press <kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>Cmd</kbd>+<kbd>O</kbd> (or <kbd>Ctrl</kbd>+<kbd>J</kbd> / <kbd>Cmd</kbd>+<kbd>J</kbd>) to open Amplenote's Quick Search / Jump-to-Note.
-- Type **`Open Cat Facts`** and press <kbd>Enter</kbd>.
+- Type **`Open Peek Viewer`** and press <kbd>Enter</kbd>.
 - The dedicated **Peek Viewer** dashboard will instantly dock in your sidebar (or open in an embed frame).
 
 ### 3. Interactive Peek Viewer Dashboard
@@ -168,6 +168,7 @@ The dashboard is structured into 3 distinct cards designed for optimal vertical 
 When the Peek Viewer dashboard is focused:
 - <kbd>Space</kbd> or <kbd>→</kbd> : Fetch the next cat fact and image.
 - <kbd>C</kbd> : Copy the current fact text to your clipboard.
+- <kbd>I</kbd> : Insert the fact and photo directly into your focused note.
 
 ---
 

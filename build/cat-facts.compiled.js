@@ -1100,23 +1100,24 @@ function renderCatFactsEmbed(app, options = {}) {
 
     .primary-btn-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 7px 11px;
+      gap: 5px;
+      padding: 7px 6px;
       border-radius: var(--radius-sm);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       user-select: none;
+      white-space: nowrap;
     }
 
     .btn:active {
@@ -1339,6 +1340,10 @@ function renderCatFactsEmbed(app, options = {}) {
           <span class="emoji-icon">\u{1F4CB}</span>
           <span>Copy Fact</span>
         </button>
+        <button class="btn btn-secondary" id="btnInsert" title="Insert into active note (Shortcut: I)">
+          <span class="emoji-icon">\u{1F4DD}</span>
+          <span>Insert Note</span>
+        </button>
       </div>
 
       <!-- Toggles -->
@@ -1360,7 +1365,7 @@ function renderCatFactsEmbed(app, options = {}) {
       </div>
 
       <div class="shortcut-hint">
-        Press <kbd>Space</kbd> for next \u2022 <kbd>C</kbd> or click fact to copy
+        Press <kbd>Space</kbd> next \u2022 <kbd>C</kbd> copy \u2022 <kbd>I</kbd> insert
       </div>
     </div>
   </div>
@@ -1453,6 +1458,7 @@ function renderCatFactsEmbed(app, options = {}) {
       const matchDetail = document.getElementById("matchDetail");
       const btnNext = document.getElementById("btnNext");
       const btnCopy = document.getElementById("btnCopy");
+      const btnInsert = document.getElementById("btnInsert");
       const toggleSmart = document.getElementById("toggleSmart");
       const toggleLive = document.getElementById("toggleLive");
       const toast = document.getElementById("toast");
@@ -1672,7 +1678,7 @@ function renderCatFactsEmbed(app, options = {}) {
           // Live API status indicator & footer
           if (isLive) {
             liveBadge.className = "pill-badge pill-live";
-            liveBadge.innerHTML = '<span class="live-pulse"></span><span>Live API</span>';
+            liveBadge.innerHTML = '<span class="live-pulse"></span><span>Live API</span>' + (latency ? ' <span class="latency-ms">(' + latency + 'ms)</span>' : '');
             liveBadge.title = source + (latency ? " (" + latency + "ms)" : "");
             factSourceLabel.innerHTML = '<span><span class="emoji-icon">\u{1F7E2}</span> <span>' + source + '</span>' + (latency ? ' <small style="font-weight:700; opacity:0.9">(' + latency + 'ms)</small>' : '') + '</span>';
           } else {
@@ -1751,9 +1757,42 @@ function renderCatFactsEmbed(app, options = {}) {
         }
       }
 
+      // Insert fact into active Amplenote note
+      async function insertIntoNote() {
+        if (!currentFact) return;
+        btnInsert.disabled = true;
+        try {
+          if (typeof window.callAmplenotePlugin === "function") {
+            const res = await window.callAmplenotePlugin("insertIntoNote", {
+              fact: currentFact,
+              imageUrl: currentImage ? currentImage.url : null,
+              category: currentClassification ? currentClassification.label : null,
+              badge: currentClassification ? currentClassification.badge : null,
+              isLive: isCurrentFactLive,
+              style: "card_with_image"
+            });
+            if (res && res.success) {
+              showToast("Inserted into note!", "\u{1F4DD}");
+            } else if (res && res.error) {
+              showToast(res.error, "\u26A0\uFE0F");
+            } else {
+              showToast("Inserted into note!", "\u{1F4DD}");
+            }
+          } else {
+            showToast("Open in note to insert", "\u2139\uFE0F");
+          }
+        } catch (err) {
+          console.warn("[CatFacts] insertIntoNote failed:", err);
+          showToast("Failed to insert into note", "\u26A0\uFE0F");
+        } finally {
+          btnInsert.disabled = false;
+        }
+      }
+
       // Event Listeners
       btnNext.addEventListener("click", updateDisplay);
       btnCopy.addEventListener("click", copyFact);
+      btnInsert.addEventListener("click", insertIntoNote);
       factBody.addEventListener("click", copyFact);
 
       toggleSmart.addEventListener("change", function(e) {
@@ -1796,6 +1835,8 @@ function renderCatFactsEmbed(app, options = {}) {
           // Allow normal copy
         } else if (e.code === "KeyC") {
           copyFact();
+        } else if (e.code === "KeyI" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          insertIntoNote();
         }
       });
 
@@ -1838,14 +1879,28 @@ async function launchCatFactsPeek(app) {
     }
   }
 }
+async function insertMarkdownOrFallback(app, markdown) {
+  if (app?.context && typeof app.context.replaceSelection === "function") {
+    try {
+      const replaced = await app.context.replaceSelection(markdown);
+      if (replaced) {
+        return null;
+      }
+    } catch (err) {
+      console.warn("[CatFacts] replaceSelection failed, falling back to direct return:", err);
+    }
+  }
+  return markdown;
+}
 async function insertPlainFact(app) {
   try {
     const { fact, source, isLive } = await getCatFact({ preferOnline: true });
-    return formatFactMarkdown(fact, {
+    const markdown = formatFactMarkdown(fact, {
       style: "plain",
       isLive,
       source
     });
+    return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
     console.error("[CatFacts] insertPlainFact error:", err);
     return "\u{1F7E2} Cats sleep for roughly 70% of their lives.";
@@ -1855,13 +1910,14 @@ async function insertQuoteFact(app) {
   try {
     const { fact, source, isLive } = await getCatFact({ preferOnline: true });
     const { classification } = selectImageForFact(fact);
-    return formatFactMarkdown(fact, {
+    const markdown = formatFactMarkdown(fact, {
       style: "quote",
       category: classification.label,
       badge: classification.badge,
       isLive,
       source
     });
+    return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
     console.error("[CatFacts] insertQuoteFact error:", err);
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> Cats make over 100 different vocal sounds.\n";
@@ -1871,7 +1927,7 @@ async function insertPhotoFact(app) {
   try {
     const { fact, source, isLive } = await getCatFact({ preferOnline: true });
     const { image, classification } = selectImageForFact(fact);
-    return formatFactMarkdown(fact, {
+    const markdown = formatFactMarkdown(fact, {
       style: "card_with_image",
       imageUrl: image.url,
       category: classification.label,
@@ -1879,26 +1935,27 @@ async function insertPhotoFact(app) {
       isLive,
       source
     });
+    return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
     console.error("[CatFacts] insertPhotoFact error:", err);
     return "> \u{1F7E2} **\u{1F43E} Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }
-var insertTextHandler = insertPlainFact;
-insertTextHandler["Random Cat Fact"] = insertPlainFact;
-insertTextHandler["Cat Fact Quote Card"] = insertQuoteFact;
-insertTextHandler["Cat Fact with Photo"] = insertPhotoFact;
-var appOptionHandler = launchCatFactsPeek;
-appOptionHandler["Open Cat Facts"] = launchCatFactsPeek;
 var plugin = {
   /**
    * Insert text options invoked via the { menu or text replacement.
    */
-  insertText: insertTextHandler,
+  insertText: {
+    "Random": insertPlainFact,
+    "Quote Card": insertQuoteFact,
+    "Photo Card": insertPhotoFact
+  },
   /**
    * Global command options available via Quick Search / Jump-to-Note.
    */
-  appOption: appOptionHandler,
+  appOption: {
+    "Open Peek Viewer": launchCatFactsPeek
+  },
   /**
    * Renders the interactive Peek Viewer embed iframe.
    * @param {object} app - Amplenote app interface.

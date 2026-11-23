@@ -21,59 +21,69 @@ describe("cat-facts.js Plugin Entry Point", () => {
   describe("Plugin Exports Structure", () => {
     test("exports required Amplenote action handlers", () => {
       expect(plugin).toBeDefined();
-      expect(typeof plugin.insertText).toBe("function");
-      expect(typeof plugin.appOption).toBe("function");
+      expect(typeof plugin.insertText).toBe("object");
+      expect(typeof plugin.appOption).toBe("object");
       expect(typeof plugin.renderEmbed).toBe("function");
       expect(typeof plugin.onEmbedCall).toBe("function");
     });
 
     test("registers named insertText options", () => {
-      expect(typeof plugin.insertText["Random Cat Fact"]).toBe("function");
-      expect(typeof plugin.insertText["Cat Fact Quote Card"]).toBe("function");
-      expect(typeof plugin.insertText["Cat Fact with Photo"]).toBe("function");
+      expect(typeof plugin.insertText["Random"]).toBe("function");
+      expect(typeof plugin.insertText["Quote Card"]).toBe("function");
+      expect(typeof plugin.insertText["Photo Card"]).toBe("function");
     });
 
     test("registers named appOption handler", () => {
-      expect(typeof plugin.appOption["Open Cat Facts"]).toBe("function");
+      expect(typeof plugin.appOption["Open Peek Viewer"]).toBe("function");
     });
   });
 
   describe("insertText Execution", () => {
-    test("Random Cat Fact returns plain fact string with green dot", async () => {
-      const result = await plugin.insertText["Random Cat Fact"](mockApp);
-      expect(typeof result).toBe("string");
-      expect(result.length).toBeGreaterThan(10);
-      expect(result.startsWith("🟢 ") || result.startsWith("💾 ")).toBe(true);
-      expect(result).not.toContain("catfact.ninja");
+    test("Random fact replaces selection when available", async () => {
+      const result = await plugin.insertText["Random"](mockApp);
+      expect(mockApp.context.replaceSelection).toHaveBeenCalled();
+      const inserted = mockApp.context.replaceSelection.mock.calls[0][0];
+      expect(inserted.startsWith("🟢 ") || inserted.startsWith("💾 ")).toBe(true);
+      expect(result).toBeNull();
     });
 
-    test("Cat Fact Quote Card returns markdown quote block with green dot and no url link", async () => {
-      const result = await plugin.insertText["Cat Fact Quote Card"](mockApp);
-      expect(result).toContain("> ");
-      expect(result.includes("🟢") || result.includes("💾")).toBe(true);
-      expect(result).not.toContain("catfact.ninja");
+    test("Quote Card replaces selection with markdown quote block and returns null to prevent escaping", async () => {
+      const result = await plugin.insertText["Quote Card"](mockApp);
+      expect(mockApp.context.replaceSelection).toHaveBeenCalled();
+      const inserted = mockApp.context.replaceSelection.mock.calls[0][0];
+      expect(inserted).toContain("> ");
+      expect(inserted.includes("🟢") || inserted.includes("💾")).toBe(true);
+      expect(result).toBeNull();
     });
 
-    test("Cat Fact with Photo returns markdown image and quote with green dot", async () => {
-      const result = await plugin.insertText["Cat Fact with Photo"](mockApp);
-      expect(result).toContain("![");
-      expect(result.includes("https://images.unsplash.com/") || result.includes("https://cdn2.thecatapi.com/")).toBe(true);
-      expect(result).toContain("> ");
-      expect(result.includes("🟢") || result.includes("💾")).toBe(true);
-      expect(result).not.toContain("catfact.ninja");
+    test("Photo Card replaces selection with markdown photo and quote and returns null", async () => {
+      const result = await plugin.insertText["Photo Card"](mockApp);
+      expect(mockApp.context.replaceSelection).toHaveBeenCalled();
+      const inserted = mockApp.context.replaceSelection.mock.calls[0][0];
+      expect(inserted).toContain("![");
+      expect(inserted.includes("https://images.unsplash.com/") || inserted.includes("https://cdn2.thecatapi.com/")).toBe(true);
+      expect(inserted).toContain("> ");
+      expect(result).toBeNull();
     });
 
-    test("default insertText handler returns a fact string with green dot", async () => {
-      const result = await plugin.insertText(mockApp);
-      expect(typeof result).toBe("string");
-      expect(result.length).toBeGreaterThan(10);
-      expect(result.startsWith("🟢 ") || result.startsWith("💾 ")).toBe(true);
+    test("insertText options fall back to returning markdown string when replaceSelection is unavailable", async () => {
+      const plainResult = await plugin.insertText["Random"](null);
+      expect(typeof plainResult).toBe("string");
+      expect(plainResult.length).toBeGreaterThan(10);
+
+      const quoteResult = await plugin.insertText["Quote Card"](null);
+      expect(typeof quoteResult).toBe("string");
+      expect(quoteResult).toContain("> ");
+
+      const photoResult = await plugin.insertText["Photo Card"](null);
+      expect(typeof photoResult).toBe("string");
+      expect(photoResult).toContain("![");
     });
   });
 
   describe("appOption Execution", () => {
     test("calls app.openSidebarEmbed with correct options", async () => {
-      await plugin.appOption(mockApp);
+      await plugin.appOption["Open Peek Viewer"](mockApp);
       expect(mockApp.openSidebarEmbed).toHaveBeenCalledWith(
         { id: "cat-facts-peek", aspectRatio: 1.1 },
         {}
@@ -82,7 +92,7 @@ describe("cat-facts.js Plugin Entry Point", () => {
 
     test("falls back to openEmbed when openSidebarEmbed returns false (mobile)", async () => {
       mockApp.openSidebarEmbed.mockResolvedValue(false);
-      await plugin.appOption(mockApp);
+      await plugin.appOption["Open Peek Viewer"](mockApp);
       expect(mockApp.openEmbed).toHaveBeenCalledWith(1.1, {});
     });
 
@@ -90,12 +100,12 @@ describe("cat-facts.js Plugin Entry Point", () => {
       const minimalApp = {
         alert: jest.fn().mockResolvedValue(true)
       };
-      await plugin.appOption(minimalApp);
+      await plugin.appOption["Open Peek Viewer"](minimalApp);
       expect(minimalApp.alert).toHaveBeenCalled();
     });
 
     test("handles null or missing app without throwing", async () => {
-      await expect(plugin.appOption(null)).resolves.toBeUndefined();
+      await expect(plugin.appOption["Open Peek Viewer"](null)).resolves.toBeUndefined();
     });
   });
 

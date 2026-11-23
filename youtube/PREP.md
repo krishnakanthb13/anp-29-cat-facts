@@ -48,12 +48,12 @@ Whether you need a quick burst of joy during intense writing sessions, education
 📋 FEATURE BREAKDOWN
 
 TEXT INSERTION COMMANDS (insertText)
-* Random Cat Fact: Inserts a single-line fact prefixed with an unobtrusive status dot (🟢 for Live API, 💾 for Curated Storage) without markdown link clutter.
-* Cat Fact Quote Card: Inserts a formatted markdown blockquote displaying the thematic category badge, status indicator, and fact copy.
-* Cat Fact with Photo: Embeds a thematically matched cat photo in clean markdown followed directly by the styled quote card.
+* Random: Inserts a single-line fact prefixed with an unobtrusive status dot (🟢 for Live API, 💾 for Curated Storage) without markdown link clutter.
+* Quote Card: Inserts a formatted markdown blockquote displaying the thematic category badge, status indicator, and fact copy.
+* Photo Card: Embeds a thematically matched cat photo in clean markdown followed directly by the styled quote card.
 
 PEEK VIEWER SIDEBAR DASHBOARD (appOption)
-* Quick Launch: Instant invocation via Quick Search / Jump-to-Note by typing "Open Cat Facts".
+* Quick Launch: Instant invocation via Quick Search / Jump-to-Note by typing "Open Peek Viewer".
 * Ergonomic 3-Card Layout: Tailored specifically for narrow sidebars (300px to 420px) with Fact Card FIRST, Image Card SECOND, and Options Card THIRD.
 * Live API Telemetry: Real-time pulsing 🟢 indicator showing response latency in milliseconds and active upstream provider (catfact.ninja or meowfacts), with seamless offline fallback.
 * Click-to-Copy: Click anywhere across the fact card body to immediately copy the fact text to your clipboard with instant toast feedback.

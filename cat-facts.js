@@ -52,18 +52,42 @@ async function launchCatFactsPeek(app) {
 }
 
 /**
+ * Inserts markdown content via app.context.replaceSelection if available,
+ * returning null to prevent Amplenote from escaping markdown syntax with backslashes.
+ * Falls back to returning the raw markdown string if replaceSelection is unavailable.
+ *
+ * @param {object} [app] - Amplenote API object.
+ * @param {string} markdown - Markdown string to insert.
+ * @returns {Promise<string|null>} null if replaced via replaceSelection, or the markdown string fallback.
+ */
+async function insertMarkdownOrFallback(app, markdown) {
+  if (app?.context && typeof app.context.replaceSelection === "function") {
+    try {
+      const replaced = await app.context.replaceSelection(markdown);
+      if (replaced) {
+        return null;
+      }
+    } catch (err) {
+      console.warn("[CatFacts] replaceSelection failed, falling back to direct return:", err);
+    }
+  }
+  return markdown;
+}
+
+/**
  * Handles text insertion for random cat facts.
  * @param {object} [app] - Amplenote API object.
- * @returns {Promise<string>} Formatted markdown fact.
+ * @returns {Promise<string|null>} Formatted markdown fact or null if replaced.
  */
 async function insertPlainFact(app) {
   try {
     const { fact, source, isLive } = await getCatFact({ preferOnline: true });
-    return formatFactMarkdown(fact, {
+    const markdown = formatFactMarkdown(fact, {
       style: "plain",
       isLive,
       source
     });
+    return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
     console.error("[CatFacts] insertPlainFact error:", err);
     return "🟢 Cats sleep for roughly 70% of their lives.";
@@ -73,19 +97,20 @@ async function insertPlainFact(app) {
 /**
  * Handles text insertion for a formatted quote card.
  * @param {object} [app] - Amplenote API object.
- * @returns {Promise<string>} Formatted markdown quote card.
+ * @returns {Promise<string|null>} Formatted markdown quote card or null if replaced.
  */
 async function insertQuoteFact(app) {
   try {
     const { fact, source, isLive } = await getCatFact({ preferOnline: true });
     const { classification } = selectImageForFact(fact);
-    return formatFactMarkdown(fact, {
+    const markdown = formatFactMarkdown(fact, {
       style: "quote",
       category: classification.label,
       badge: classification.badge,
       isLive,
       source
     });
+    return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
     console.error("[CatFacts] insertQuoteFact error:", err);
     return "> 🟢 **🐾 Cat Fact**\n> Cats make over 100 different vocal sounds.\n";
@@ -95,13 +120,13 @@ async function insertQuoteFact(app) {
 /**
  * Handles text insertion for a fact with a matched contextual photo.
  * @param {object} [app] - Amplenote API object.
- * @returns {Promise<string>} Formatted markdown photo card.
+ * @returns {Promise<string|null>} Formatted markdown photo card or null if replaced.
  */
 async function insertPhotoFact(app) {
   try {
     const { fact, source, isLive } = await getCatFact({ preferOnline: true });
     const { image, classification } = selectImageForFact(fact);
-    return formatFactMarkdown(fact, {
+    const markdown = formatFactMarkdown(fact, {
       style: "card_with_image",
       imageUrl: image.url,
       category: classification.label,
@@ -109,21 +134,12 @@ async function insertPhotoFact(app) {
       isLive,
       source
     });
+    return await insertMarkdownOrFallback(app, markdown);
   } catch (err) {
     console.error("[CatFacts] insertPhotoFact error:", err);
     return "> 🟢 **🐾 Cat Fact**\n> A cat can jump up to six times its height.\n";
   }
 }
-
-// Named insertText options
-const insertTextHandler = insertPlainFact;
-insertTextHandler["Random Cat Fact"] = insertPlainFact;
-insertTextHandler["Cat Fact Quote Card"] = insertQuoteFact;
-insertTextHandler["Cat Fact with Photo"] = insertPhotoFact;
-
-// Named appOption handler
-const appOptionHandler = launchCatFactsPeek;
-appOptionHandler["Open Cat Facts"] = launchCatFactsPeek;
 
 /**
  * The Amplenote plugin object.
@@ -132,12 +148,18 @@ const plugin = {
   /**
    * Insert text options invoked via the { menu or text replacement.
    */
-  insertText: insertTextHandler,
+  insertText: {
+    "Random": insertPlainFact,
+    "Quote Card": insertQuoteFact,
+    "Photo Card": insertPhotoFact
+  },
 
   /**
    * Global command options available via Quick Search / Jump-to-Note.
    */
-  appOption: appOptionHandler,
+  appOption: {
+    "Open Peek Viewer": launchCatFactsPeek
+  },
 
   /**
    * Renders the interactive Peek Viewer embed iframe.

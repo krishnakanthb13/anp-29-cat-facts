@@ -42,7 +42,7 @@ Purrfect Cat Facts integrates three core subsystems:
         ┌────────────────┴────────────────┐
         ▼                                 ▼
 ┌──────────────────┐            ┌──────────────────┐
-│ catfact.ninja    │            │ 67 Curated Cats  │
+│ catfact.ninja    │            │ 70 Curated Cats  │
 │ (Live Endpoint)  │            │ (Thematic Pool)  │
 └──────────────────┘            └──────────────────┘
 ```
@@ -104,8 +104,13 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
   - Rendered inside an isolated `<iframe>` by Amplenote.
   - Client-side DOM with zero external CSS/JS dependencies.
   - Image skeleton shimmer with graceful `onerror` and `onload` handlers.
-  - Cached DOM references (including `toastIcon`) to avoid repeated querying.
-  - Two-way messaging: calls `window.callAmplenotePlugin("insertIntoNote", payload)` to communicate with host plugin.
+  - Cached DOM references (`btnNext`, `btnCopy`, `btnInsert`, `toastIcon`) for minimal DOM querying overhead.
+  - **Card 3 Actions & RPC**:
+    - `btnNext` (🐾 Next Fact): Fetches next fact & image.
+    - `btnCopy` (📋 Copy Fact): Copies fact to clipboard with visual toast feedback.
+    - `btnInsert` (📝 Insert Note): Calls `window.callAmplenotePlugin("insertIntoNote", payload)` to insert formatted photo card into the focused note.
+  - **Keyboard Navigation**: <kbd>Space</kbd> or <kbd>→</kbd> for Next Fact, <kbd>C</kbd> to copy, <kbd>I</kbd> to insert note.
+  - **Latency Telemetry**: Distinct `🟢 Live API` status badge displaying round-trip response time (`.latency-ms`).
 
 ### 2.6 `lib/utils.js`
 - **Single-Pass HTML Sanitization**:
@@ -118,8 +123,9 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
 
 ### 2.7 `cat-facts.js`
 - **Amplenote Plugin Protocol**:
-  - `insertText`: Direct handler and named option dictionary (`"Random Cat Fact"`, `"Cat Fact Quote Card"`, `"Cat Fact with Photo"`).
-  - `appOption`: Launches Peek Viewer embed (`openSidebarEmbed` with numeric fallback to `openEmbed`).
+  - `insertText`: Named option dictionary (`"Random"`, `"Quote Card"`, `"Photo Card"`).
+  - `insertMarkdownOrFallback`: Calls `await app.context.replaceSelection(markdown)` and returns `null` so Amplenote parses the string natively as rich GFM without escaping syntax characters with backslashes (`\>`, `\*\*`, `!\[\]\(\)`). Falls back to returning the raw markdown string if `replaceSelection` is unavailable.
+  - `appOption`: Named option dictionary (`"Open Peek Viewer"`) launching the Peek Viewer embed (`openSidebarEmbed` with numeric fallback to `openEmbed`).
   - `renderEmbed`: Generates HTML string.
   - `onEmbedCall`: Dispatches incoming actions (`insertIntoNote`, `notify`) with defensive `payload ?? {}` normalization and optional chaining on `app?.context` to safeguard against null or malformed RPC invocations.
 
@@ -130,14 +136,15 @@ Following the [Debloating Large Datasets Guide](../../common-issues-and-fixes/da
 The plugin includes automated unit and integration tests covering all modules:
 - `test/api.test.js`: Mocked live endpoints, abort timeouts, and offline fallback.
 - `test/classifier.test.js`: Keyword matching, scoring tiers, and fallback behavior across 11 categories.
+- `test/embed.test.js`: Peek Viewer DOM structure, required controls (`btnNext`, `btnCopy`, `btnInsert`), and RPC integration.
 - `test/facts.test.js`: Seed integrity, dataset bounds, and `getFactByIndex` normalization.
 - `test/images.test.js`: CDN URL format, category distribution, and random selection.
-- `test/plugin.test.js`: Entry point actions, note insertion strategies, and null/undefined payload resilience.
+- `test/plugin.test.js`: Entry point actions, `replaceSelection` integration, note insertion strategies, and null/undefined payload resilience.
 - `test/utils.test.js`: Single-pass HTML escaping, random sampling, and markdown generation.
 
 **Execution Command**:
 ```bash
 node --experimental-vm-modules node_modules/jest/bin/jest.js anp-29-cat-facts/test
 ```
-*Current Status: 6 suites, 61 passing tests (100% pass rate).*
+*Current Status: 7 suites, 77 passing tests (100% pass rate).*
 

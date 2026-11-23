@@ -32,4 +32,10 @@ Amplenote plugins execute within a rich note-taking environment where keystrokes
 - **Single-Pass Sanitization**: String escaping utilizes single-pass regular expression lookups ($O(N)$) rather than chained multi-pass replacements.
 - **Defensive Host Boundaries**: Host RPC calls (`onEmbedCall`) and API handlers normalize incoming payloads defensively (`payload ?? {}`) and use optional chaining, ensuring that mobile environments or missing note context fail gracefully without unhandled exceptions.
 
+### 1.7 Markdown Fidelity & Clean Note Insertion
+Amplenote's note editor parses strings returned from `insertText` as plain text, escaping markdown syntax characters with backslashes (`\>`, `\*\*`, `!\[`) to prevent accidental note formatting.
+- **Native GFM Preservation**: Rich formatting (such as blockquotes `> ` and contextual photos `![alt](url)`) must be inserted through `app.context.replaceSelection(markdown)` and return `null`.
+- **Zero-Clutter Delivery**: This ensures quotes and images render directly as native ProseMirror rich-text elements without backslash artifacts.
+- **Resilient Fallback**: If `replaceSelection` is unavailable or throws, the plugin gracefully falls back to returning raw markdown, ensuring no user action ever results in silent failure.
+
 

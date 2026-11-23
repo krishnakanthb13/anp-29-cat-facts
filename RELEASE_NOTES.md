@@ -1,5 +1,21 @@
 # Release Notes: Purrfect Cat Facts
 
+## v0.0.11 (2026-11-23)
+
+### 🐛 Bug Fixes & Refinements
+- **Streamlined Action Option Names (No Repetition)**:
+  - Renamed `insertText` options from `"Random Cat Fact"`, `"Cat Fact Quote Card"`, `"Cat Fact with Photo"` to `"Random"`, `"Quote Card"`, and `"Photo Card"`. Since Amplenote automatically prefixes `Plugin: <Plugin Name>:`, this eliminates awkward word duplication like `Plugin: Cat Facts: Random Cat Fact` in favor of clean entries (`Plugin: Cat Facts: Random`, `Plugin: Cat Facts: Quote Card`, `Plugin: Cat Facts: Photo Card`).
+  - Renamed `appOption` to `"Open Peek Viewer"` to avoid repeating "Cat Facts" in Quick Search (`Plugin: Cat Facts: Open Peek Viewer`).
+- **Multi-Option Action Registration (`insertText` & `appOption`)**:
+  - Converted `insertText` from a function to a standard dictionary (`"Random Cat Fact"`, `"Cat Fact Quote Card"`, `"Cat Fact with Photo"`), enabling Amplenote to register and display all 3 options in the `{` expression menu.
+  - Converted `appOption` to a standard dictionary (`"Open Cat Facts"`), making the dashboard command discoverable in Quick Search / Jump-to-Note.
+- **Markdown Escaping Resolution via `replaceSelection`**:
+  - Implemented `insertMarkdownOrFallback`: uses `await app.context.replaceSelection(markdown)` and returns `null` so Amplenote renders rich blockquotes, bold badges, and contextual photos natively without escaping markdown syntax with backslashes (`\>`, `\*\*`, `!\[\]\(\)`).
+- **Peek Viewer "Insert Note" Button & Keyboard Shortcut**:
+  - Added the `📝 Insert Note` button to Card 3, executing `window.callAmplenotePlugin("insertIntoNote", payload)` with visual toast feedback.
+  - Added <kbd>I</kbd> keyboard shortcut for one-key insertion into the focused note.
+  - Added round-trip response latency display (`.latency-ms`) directly inside the `🟢 Live API` badge.
+
 ## v0.0.10 (2026-11-22)
 
 **Initial Open-Source Release**
