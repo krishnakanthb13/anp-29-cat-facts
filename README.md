@@ -3,6 +3,8 @@
 > **An intelligent, delightful Amplenote plugin delivering fascinating feline wisdom with contextual photo matching, powered by [catfact.ninja](https://catfact.ninja/).**
 >
 > 🐾 **Features**: Text insertion, interactive Peek Viewer dashboard (3 distinct cards, minimal header), 70 visually verified 100% feline photos, real-time semantic classifier, and live API integration with 100% offline fallback.
+>
+> 📺 **Video Walkthrough**: [Watch the Full Guide on YouTube](https://youtu.be/jGSbScwg4eQ)
 
 ---
 
@@ -130,6 +132,8 @@ Follow these steps to install and activate **Purrfect Cat Facts** in your Amplen
 ---
 
 ## 💡 Usage Guide
+
+> 💡 **Video Walkthrough**: Prefer a visual demonstration? [Watch the complete video walkthrough on YouTube (4 mins)](https://youtu.be/jGSbScwg4eQ) for a step-by-step tour of all commands, Peek Viewer controls, and keyboard shortcuts.
 
 ### 1. Text Insertion Commands (`insertText`)
 Type `{` inside any Amplenote note, jot, or task to open the plugin insert menu:

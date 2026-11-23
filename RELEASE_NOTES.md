@@ -1,5 +1,33 @@
 # Release Notes: Purrfect Cat Facts
 
+## v0.0.16 (2026-11-23)
+
+### 🚀 Official First Public Release
+- **Initial Public Release Launch**: Purrfect Cat Facts officially debuts for the Amplenote plugin ecosystem! Brings verified feline wisdom, contextual photo matching, and a responsive sidebar companion to daily notes, jots, and writing sessions.
+- **Interactive 3-Card Peek Viewer Dashboard (`appOption: Open Peek Viewer`)**:
+  - Purpose-built for narrow sidebar viewports (300px to 420px) with Fact Card FIRST, Image Card SECOND, and Options Card THIRD.
+  - Body-wide click-to-copy anywhere on the fact card with animated toast feedback and iframe-resilient fallback.
+  - Live API status telemetry with pulsing indicator displaying active upstream provider (`catfact.ninja` or `meowfacts`) and round-trip response latency in milliseconds.
+  - Keyboard shortcuts (<kbd>Space</kbd> or <kbd>→</kbd> for Next Fact, <kbd>C</kbd> to copy) for rapid browsing.
+  - Quick action controls with real-time toggles for **Smart Match** (thematic matching vs random) and **Live API** (network query vs offline library).
+- **Intelligent Semantic Classifier (`lib/classifier.js`)**:
+  - Classifies feline facts across 11 thematic domains (Sleep & Rest, Vision & Senses, Whiskers & Ears, Kittens & Growth, Speed & Agility, Purring & Vocal, Grooming & Fur, Hunting & Wild, Black Cats & Magic, Ancient History, and Anatomy & Biology).
+  - Whole-word regex boundary matching prevents substring false positives (e.g. `heart`/`earthquake` matching `ear`).
+- **70 Visually Audited Cat Photos (`lib/data/images.js`)**:
+  - 100% verified authentic domestic and wild felines matching classified topics. Zero dogs, zero controllers, zero cars, zero dead links.
+  - Animated skeleton shimmers and memory pre-loading prevent visual layout shifts.
+- **Native Selection Replacement (`insertText`)**:
+  - Clean insertion via `app.context.replaceSelection` eliminating markdown backslash escaping (`Random`, `Quote Card`, `Photo Card`).
+  - Guaranteed single insertion return contract preventing duplicate notes or postMessage errors.
+- **5-Tier Offline-First Failover Architecture**:
+  - Primary `catfact.ninja` (6s timeout) ➔ Secondary `meowfacts` (4s timeout) ➔ Browser `localStorage` cache ➔ Inlined starter seed (`SEED_FACTS` / `SEED_IMAGES`) ➔ Safe fallback string.
+  - Works reliably anywhere, including offline and airplane mode with zero user configuration.
+- **Production Packaging & Quality**:
+  - 78 passing unit & integration tests across 7 Jest suites with deterministic network mocks.
+  - GPL v3 open-source licensing with complete copyright headers and security audit compliance.
+- **Video Walkthrough**:
+  - Published complete feature tour and architecture walkthrough on YouTube at [https://youtu.be/jGSbScwg4eQ](https://youtu.be/jGSbScwg4eQ).
+
 ## v0.0.15 (2026-11-23)
 
 ### 🐛 Bug Fixes & Integrity

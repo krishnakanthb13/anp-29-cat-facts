@@ -6,6 +6,8 @@ This document contains packaging metadata, an optimized Google & Gemini 3.8 Flas
 
 ## 1. Packaging Metadata
 
+*   **Video URL:** https://youtu.be/jGSbScwg4eQ
+
 ### Title Options
 *   **Option A (Clear & Direct):** How to Use the Purrfect Cat Facts Plugin in Amplenote
 *   **Option B (Benefit-driven):** Delight Your Notes with Smart Cat Facts & Contextual Photos in Amplenote!
@@ -28,6 +30,7 @@ A straightforward, fact-based walkthrough of the Purrfect Cat Facts plugin for A
 Whether you need a quick burst of joy during intense writing sessions, educational trivia for daily jots, or a relaxing sidebar companion while organizing projects, this plugin offers zero-configuration ease with 100% offline resilience.
 
 🔗 ESSENTIAL LINKS & RESOURCES
+* Watch Video: https://youtu.be/jGSbScwg4eQ
 * GitHub Repo: https://github.com/krishnakanthb13/anp-29-cat-facts
 * Try Amplenote (Sign Up): https://www.amplenote.com/signup?ref=7JGSMI4H0
 * Explore My Amplenote Plugins: https://krishnakanthb13.github.io/A/
@@ -37,13 +40,13 @@ Whether you need a quick burst of joy during intense writing sessions, education
 
 🕒 VIDEO TIMESTAMPS
 0:00 - Introduction & Overview
-0:38 - Zero-Config Setup & Marketplace Availability
-1:04 - Quick Text Insertion Commands (insertText)
-2:12 - Launching the Interactive Peek Viewer (appOption)
-2:48 - Card 1: Fact Card, Live API Telemetry & Click-to-Copy
-3:42 - Card 2: Contextual Image Matching & 70 Audited Photos
-4:32 - Card 3: Action Controls, Toggles & Keyboard Shortcuts
-5:20 - Conclusion & Resources
+0:34 - Zero-Config Setup & Marketplace Availability
+0:55 - Quick Text Insertion Commands (insertText)
+2:02 - Launching the Interactive Peek Viewer (appOption)
+2:27 - Card 1: Fact Card, Live API Telemetry & Click-to-Copy
+2:58 - Card 2: Contextual Image Matching & 70 Audited Photos
+3:35 - Card 3: Action Controls, Toggles & Keyboard Shortcuts
+4:10 - Conclusion & Resources
 
 📋 FEATURE BREAKDOWN
 

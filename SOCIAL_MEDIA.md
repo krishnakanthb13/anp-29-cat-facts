@@ -1,5 +1,117 @@
 # Social Media Release Drafts: Purrfect Cat Facts
 
+## Released: Purrfect Cat Facts v0.0.16 (2026-11-23)
+
+### LinkedIn
+
+Excited to announce the official open-source launch of Purrfect Cat Facts v0.0.16 for Amplenote! 🐱🚀
+
+Taking notes, triaging tasks, and doing deep writing requires sustained mental energy. Small moments of levity and delightful design can rejuvenate long working sessions. Purrfect Cat Facts is an intelligent companion plugin that delivers fascinating feline wisdom paired with authentic, thematically matched cat photography and a dedicated sidebar dashboard.
+
+Here is what makes this first public release special:
+
+🐾 Instant Text Insertions: Type { anywhere inside a note or task to insert clean one-liners with status indicator dots, elegant markdown quote blocks, or complete photo quote cards with zero markdown escaping issues.
+
+🧠 11-Topic Semantic Classifier: Rather than pairing random photos with arbitrary trivia, a lightweight whole-word scoring engine analyzes fact themes across 11 feline domains (sleep, night vision, whisker anatomy, ancient Egyptian worship, agility, purr frequencies) and dynamically pairs each fact with a photo matching that exact topic.
+
+📸 70 Visually Audited Cat Photos: Every single image in our catalog has been visually verified—100% authentic cats, zero dogs, zero cars, zero controllers, and zero broken links.
+
+🪟 Interactive 3-Card Peek Viewer Dashboard: Dock a dedicated companion in your Amplenote sidebar tailored for narrow viewports (300px to 420px), complete with click-to-copy anywhere on the fact card, real-time live API telemetry (ms latency), Smart Match and Live API toggles, and keyboard shortcuts (Space / C).
+
+🛡️ 5-Tier Failover Resilience: Dual live endpoints (catfact.ninja and meowfacts) with automatic failover to browser cache and compiled starter seeds, ensuring seamless operation even in airplane mode with zero configuration.
+
+Watch the full video walkthrough:
+https://youtu.be/jGSbScwg4eQ
+
+Full open-source repository, documentation, and test suite:
+https://github.com/krishnakanthb13/anp-29-cat-facts
+
+#Amplenote #Productivity #PKM #OpenSource #SoftwareEngineering #WebDev #JavaScript #NoteTaking #Cats
+
+---
+
+### Twitter / X
+
+Purrfect Cat Facts v0.0.16 for @amplenote is out! 🐱✨
+
+Feline facts + 70 audited photos via semantic matching. Inline quotes, sidebar Peek Viewer & offline failover.
+
+Watch: https://youtu.be/jGSbScwg4eQ
+Repo: https://github.com/krishnakanthb13/anp-29-cat-facts
+
+#Amplenote
+
+---
+
+### Bluesky
+
+Purrfect Cat Facts v0.0.16 is live for Amplenote! 🐱✨
+
+Our first release brings smart feline trivia to notes:
+• Inline text insertions & quotes
+• 70 audited cat photos
+• 11-topic classifier
+• 3-card Peek Viewer
+
+Video: https://youtu.be/jGSbScwg4eQ
+Repo: https://github.com/krishnakanthb13/anp-29-cat-facts
+
+---
+
+### Mastodon
+
+Purrfect Cat Facts v0.0.16 for #Amplenote is officially released! 🐱🐾
+
+Our first production release brings delightful feline wisdom & contextual photography directly into your notes:
+• Instant text insertion: clean facts, quote blocks, and photo cards
+• Semantic classifier matching 11 topics to 70 audited feline photos
+• Interactive 3-card Peek Viewer sidebar with click-to-copy
+• 5-tier failover with 100% offline resilience
+
+Walkthrough: https://youtu.be/jGSbScwg4eQ
+Repo: https://github.com/krishnakanthb13/anp-29-cat-facts
+
+#OpenSource #PKM
+
+---
+
+### Reddit
+
+**Target Subreddits**: `r/Amplenote`, `r/PKM`, `r/NoteTaking`, `r/Productivity`, `r/javascript`, `r/webdev`, `r/SideProject`  
+**Suggested Title**: I built Purrfect Cat Facts (v0.0.16) for Amplenote — an open-source plugin with semantic photo matching, 5-tier offline failover, and a Peek Viewer dashboard
+
+Hey everyone,
+
+Long note-taking and writing sessions can get intense, and sometimes a quick moment of fun makes a huge difference. I built **Purrfect Cat Facts** for Amplenote to combine feline trivia with contextual photography, sidebar exploration, and zero-configuration ease. Today, version **v0.0.16** is officially making its first public debut!
+
+#### What it does:
+1. **Inline Text Insertions (`insertText`)**: Type `{` anywhere in your note to insert:
+   - `Random`: Clean one-liner prefixed with a live indicator dot (`🟢` for live API, `💾` for offline library) with zero markdown link clutter.
+   - `Quote Card`: Elegant markdown blockquote with category emoji badge (e.g., `> 🟢 **💤 Sleep & Rest**`).
+   - `Photo Card`: Thematically matched photo paired with the quote card.
+2. **Interactive Peek Viewer Sidebar (`appOption`)**: Press `Ctrl+O` / `Cmd+O`, type `Open Peek Viewer`, and a dedicated 3-card dashboard docks right in your sidebar.
+   - **Card 1 (Fact)**: Shows the topic badge, fact text, matched keywords, and live latency in milliseconds. Click anywhere on the card to copy to clipboard!
+   - **Card 2 (Image)**: 70 hand-curated cat photos (100% verified cats—zero dogs or cars!) with skeleton loaders to prevent layout jank.
+   - **Card 3 (Options)**: Next fact, copy fact, Smart Match and Live API toggles, and keyboard navigation (<kbd>Space</kbd> for next, <kbd>C</kbd> to copy).
+
+#### Interesting Technical Challenges Solved:
+- **Semantic Classification Without Heavy Models**: Running large ML models inside an Amplenote iframe wasn't practical. Instead, I built a lightweight whole-word regex scoring engine with pre-compiled tuples. A fact about night vision automatically pulls a photo with luminous glowing eyes; a fact about ancient Egypt shows a statuesque, regal cat. Whole-word boundary matching prevents substring false positives (e.g. `heart` matching `ear`).
+- **Clean Selection Replacement**: Rather than returning raw markdown strings that Amplenote's default insert pipeline would escape with backslashes (`\>`, `\*\*`, `!\[\]\(\)`), the plugin leverages `app.context.replaceSelection` and adheres strictly to Amplenote's string return contract, eliminating duplicate insertions and formatting artifacts.
+- **Dataset Debloating (Bundle Size Optimization)**: Inlining 137 facts and 70 photos bloated the bundle. I externalized them to JSON assets loaded dynamically from CDN/localStorage while inlining a 10-fact/11-photo starter seed for zero first-paint delay.
+- **5-Tier API Resilience**: Primary fetch to `catfact.ninja` (6s timeout) ➔ Secondary fetch to `meowfacts` (4s timeout) ➔ Browser `localStorage` cache ➔ Inlined seed ➔ Safe default strings. It never throws unhandled errors or freezes the note editor.
+
+The project is fully open-source under GPL v3 with 78 automated Jest tests and a formal security audit.
+
+Watch the complete walkthrough video here:
+https://youtu.be/jGSbScwg4eQ
+
+Check out the repository, setup guide, and compiled bundle here:
+https://github.com/krishnakanthb13/anp-29-cat-facts
+
+Would love to hear your thoughts and feedback!
+
+---
+
 ## Released: Purrfect Cat Facts v0.0.10 (2026-11-22)
 
 ### LinkedIn
@@ -96,6 +208,9 @@ Long note-taking and writing sessions can get intense, and sometimes a quick mom
 - **5-Tier API Resilience**: Primary fetch to `catfact.ninja` (6s timeout) ➔ Secondary fetch to `meowfacts` (4s timeout) ➔ Browser `localStorage` cache ➔ Inlined seed ➔ Safe default strings. It never throws unhandled errors or freezes the note editor.
 
 The project is fully open-source under GPL v3 with 78 automated Jest tests and a formal security audit.
+
+Watch the complete walkthrough video here:
+https://youtu.be/jGSbScwg4eQ
 
 Check out the repository, setup guide, and compiled bundle here:
 https://github.com/krishnakanthb13/anp-29-cat-facts
